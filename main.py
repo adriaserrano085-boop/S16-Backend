@@ -5,6 +5,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 
+app = FastAPI(title="S16 Rugby App Backup Migration API")
+
 print("Main.py: Starting imports...")
 try:
     import models
@@ -14,30 +16,19 @@ try:
     from database import engine, get_db
     from dependencies import verify_role_assignment, verify_family_link_permission, get_current_user
     print("Main.py: Imports successful.")
+    
+    # Include legitimate routes
+    app.include_router(routers_auto.router, prefix="/api/v1")
 except Exception as e:
     print(f"CRITICAL ERROR DURING IMPORTS in main.py: {e}")
     import traceback
     traceback.print_exc()
-    # Still create a dummy app to satisfy uvicorn and show error
-    from fastapi import FastAPI
-    app = FastAPI()
+    
+    # Override root to show error
     @app.get("/")
-    def error(): return {"error": "Import failure", "details": str(e)}
-    # Avoid further execution
-    import sys
-    # sys.exit(1) # We could exit, but maybe better to keep alive to see logs? 
-    # Actually uvicorn needs 'app' to be defined.
+    def import_error(): return {"error": "Import failure", "details": str(e)}
 
-if 'app' not in globals():
-    from fastapi import FastAPI
-    app = FastAPI()
-
-print("Main.py: Defining app...")
-
-# Create all database tables (Handled in startup event to avoid early crash)
-# models.Base.metadata.create_all(bind=engine)
-
-app = FastAPI(title="S16 Rugby App Backup Migration API")
+print("Main.py: Defining basic routes...")
 
 @app.get("/health")
 def health_check():
@@ -46,8 +37,6 @@ def health_check():
 @app.get("/ping")
 def ping():
     return "pong"
-
-app.include_router(routers_auto.router, prefix="/api/v1")
 
 # Configure CORS for Vercel Frontend
 origins = [
