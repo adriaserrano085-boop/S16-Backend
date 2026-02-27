@@ -162,13 +162,28 @@ def read_root():
 @app.post("/token")
 @app.post("/api/v1/token")
 def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
-    user = db.query(models.User).filter(models.User.email == form_data.username).first()
-    if not user or not auth_utils.verify_password(form_data.password, user.hashed_password):
+    email_clean = form_data.username.strip().lower()
+    logger.info(f"AUTH: Login attempt for user: {email_clean}")
+    
+    user = db.query(models.User).filter(models.User.email.ilike(email_clean)).first()
+    
+    if not user:
+        logger.warning(f"AUTH: Login failed - User not found: {email_clean}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+        
+    if not auth_utils.verify_password(form_data.password, user.hashed_password):
+        logger.warning(f"AUTH: Login failed - Password mismatch for: {email_clean}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    logger.info(f"AUTH: Login successful for: {email_clean}")
     # --- Dynamic Role Sync (Auto-RBAC) ---
     target_role = user.role
     
