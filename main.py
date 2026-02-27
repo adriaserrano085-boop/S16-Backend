@@ -179,6 +179,42 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2Passw
 
     return response_data
 
+@app.get("/users/me")
+@app.get("/api/v1/users/me")
+def get_current_user_profile(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Returns the full profile of the currently authenticated user.
+    """
+    response_data = {
+        "id": current_user.id,
+        "email": current_user.email,
+        "role": current_user.role,
+        "is_active": current_user.is_active,
+        "is_pending_validation": current_user.is_pending_validation
+    }
+    
+    # Add domain-specific IDs
+    import routers_auto # Ensure access to domain models
+    
+    if current_user.role == models.RoleEnum.JUGADOR:
+        p = db.query(routers_auto.models.JugadoresPropios).filter(
+            routers_auto.models.JugadoresPropios.email.ilike(current_user.email)
+        ).first()
+        if p: response_data["playerId"] = p.id
+        
+    elif current_user.role in [models.RoleEnum.STAFF, models.RoleEnum.ADMIN]:
+        s = db.query(routers_auto.models.Staff).filter(
+            (routers_auto.models.Staff.auth_id == str(current_user.id)) | 
+            (routers_auto.models.Staff.nombre.ilike(current_user.email))
+        ).first()
+        if s: 
+            response_data["staffId"] = s.id
+            
+    return response_data
+
 @app.post("/users/assign-role", response_model=schemas.UserResponse)
 @app.post("/api/v1/users/assign-role", response_model=schemas.UserResponse)
 def assign_role(
