@@ -70,13 +70,17 @@ def health_check(db: Session = Depends(get_db)):
         "db_resolved": db_status == "ok"
     }
 
+@app.get("/reset-admin-pwd")
 @app.get("/api/v1/reset-admin-pwd")
 def reset_admin_password(db: Session = Depends(get_db)):
+    logger.info("ADMIN_RESET: Endpoint called.")
     user = db.query(models.User).filter(models.User.email == "adriserrajime@gmail.com").first()
     if not user:
+        logger.warning("ADMIN_RESET: User adriserrajime@gmail.com NOT found in database.")
         return {"error": "User not found"}
     user.hashed_password = auth_utils.get_password_hash("bakunin1990")
     db.commit()
+    logger.info("ADMIN_RESET: Password updated successfully via endpoint.")
     return {"message": "Admin password updated to bakunin1990 successfully"}
 
 @app.get("/debug/error")
