@@ -70,6 +70,15 @@ def health_check(db: Session = Depends(get_db)):
         "db_resolved": db_status == "ok"
     }
 
+@app.get("/api/v1/reset-admin-pwd")
+def reset_admin_password(db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == "adriserrajime@gmail.com").first()
+    if not user:
+        return {"error": "User not found"}
+    user.hashed_password = auth_utils.get_password_hash("bakunin1990")
+    db.commit()
+    return {"message": "Admin password updated to bakunin1990 successfully"}
+
 @app.get("/debug/error")
 @app.get("/api/v1/debug/error")
 def get_startup_error():
