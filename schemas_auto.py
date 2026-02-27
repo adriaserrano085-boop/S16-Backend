@@ -3,9 +3,9 @@ from typing import Optional, Any
 from datetime import datetime, date, time
 
 class AsistenciaBase(BaseModel):
-    id: str
-    entrenamiento_id: Optional[str] = None
-    jugador_id: Optional[str] = None
+    id: Any
+    entrenamiento_id: Optional[Any] = None
+    jugador_id: Optional[Any] = None
     asistencia: Optional[str] = None
 
 class AsistenciaCreate(AsistenciaBase):
@@ -27,9 +27,9 @@ class EstadisticasPartidoBase(BaseModel):
     fecha_procesado: Optional[datetime] = None
     marcador_local: Optional[int] = None
     marcador_visitante: Optional[int] = None
-    partido_id: Optional[str] = None
-    partido_externo_id: Optional[str] = None
-    id: str
+    partido_id: Optional[Any] = None
+    partido_externo_id: Optional[Any] = None
+    id: Any
 
 class EstadisticasPartidoCreate(EstadisticasPartidoBase):
     pass
@@ -45,8 +45,8 @@ class EntrenamientosBase(BaseModel):
     creado_en: Optional[datetime] = None
     actualizado_en: Optional[datetime] = None
     trabajo_separado: Optional[str] = None
-    id_entrenamiento: str
-    evento: Optional[str] = None
+    id_entrenamiento: Any
+    evento: Optional[Any] = None
     trabajo_conjunto: Optional[str] = None
     calentamiento: Optional[str] = None
 
@@ -62,7 +62,7 @@ class EntrenamientosResponse(EntrenamientosBase):
 
 class RivalesBase(BaseModel):
     fecha_creacion: Optional[datetime] = None
-    id_equipo: str
+    id_equipo: Any
     ciudad: Optional[str] = None
     escudo: Optional[str] = None
     categoria: Optional[str] = None
@@ -80,8 +80,8 @@ class RivalesResponse(RivalesBase):
         from_attributes = True
 
 class StaffBase(BaseModel):
-    id: str
-    auth_id: Optional[str] = None
+    id: Any
+    auth_id: Optional[Any] = None
     fecha_nacimiento: Optional[date] = None
     activo: Optional[bool] = None
     fecha_alta: Optional[date] = None
@@ -106,14 +106,14 @@ class StaffResponse(StaffBase):
         from_attributes = True
 
 class JugadoresPropiosBase(BaseModel):
-    Usuario: Optional[str] = None
+    Usuario: Optional[Any] = None
     fecha_registro: Optional[datetime] = None
     activo: Optional[bool] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     Telefono: Optional[float] = None
     fecha_nacimiento: Optional[date] = None
-    id: str
+    id: Any
     nombre: Optional[str] = None
     apellidos: Optional[str] = None
     posiciones: Optional[str] = None
@@ -134,11 +134,11 @@ class JugadoresPropiosResponse(JugadoresPropiosBase):
 
 class FamiliasBase(BaseModel):
     updated_at: Optional[datetime] = None
-    id_usuario: str
+    id_usuario: Any
     autorizado_recoger: Optional[bool] = None
     autorizado_urgencias: Optional[bool] = None
     created_at: Optional[datetime] = None
-    id_familia: Optional[str] = None
+    id_familia: Optional[Any] = None
     contacto_principal: Optional[bool] = None
     nombre_completo: Optional[str] = None
     telefono: Optional[str] = None
@@ -156,7 +156,7 @@ class FamiliasResponse(FamiliasBase):
         from_attributes = True
 
 class JugadoresExternosBase(BaseModel):
-    id: str
+    id: Any
     created_at: Optional[datetime] = None
     licencia: Optional[str] = None
     nombre_completo: Optional[str] = None
@@ -173,7 +173,7 @@ class JugadoresExternosResponse(JugadoresExternosBase):
         from_attributes = True
 
 class EventosBase(BaseModel):
-    id: str
+    id: Any
     hora: Optional[time] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -193,15 +193,15 @@ class EventosResponse(EventosBase):
         from_attributes = True
 
 class PartidosBase(BaseModel):
-    id: str
+    id: Any
     es_local: Optional[bool] = None
     ensayos_local: Optional[int] = None
     ensayos_visitante: Optional[int] = None
     jornada: Optional[int] = None
     marcador_local: Optional[float] = None
     marcador_visitante: Optional[float] = None
-    Rival: Optional[str] = None
-    Evento: Optional[str] = None
+    Rival: Optional[Any] = None
+    Evento: Optional[Any] = None
     lugar: Optional[str] = None
     observaciones: Optional[str] = None
     acta_url: Optional[str] = None
@@ -221,7 +221,7 @@ class PartidosExternosBase(BaseModel):
     fecha: Optional[date] = None
     marcador_visitante: Optional[int] = None
     ensayos_local: Optional[int] = None
-    id: str
+    id: Any
     created_at: Optional[datetime] = None
     jornada: Optional[int] = None
     marcador_local: Optional[int] = None
@@ -240,9 +240,9 @@ class PartidosExternosResponse(PartidosExternosBase):
         from_attributes = True
 
 class ConvocatoriaBase(BaseModel):
-    id: str
-    partido: Optional[str] = None
-    jugador: Optional[str] = None
+    id: Any
+    partido: Optional[Any] = None
+    jugador: Optional[Any] = None
     numero: Optional[float] = None
 
 class ConvocatoriaCreate(ConvocatoriaBase):
@@ -257,9 +257,9 @@ class ConvocatoriaResponse(ConvocatoriaBase):
 
 class JugadorFamiliaBase(BaseModel):
     updated_at: Optional[datetime] = None
-    id_jugador_hospi: str
-    id_familia: Optional[str] = None
-    id: Optional[str] = None
+    id_jugador_hospi: Any
+    id_familia: Optional[Any] = None
+    id: Optional[Any] = None
     convive: Optional[bool] = None
     prioridad_contacto: Optional[int] = None
     created_at: Optional[datetime] = None
@@ -277,11 +277,11 @@ class JugadorFamiliaResponse(JugadorFamiliaBase):
 
 class EstadisticasJugadorBase(BaseModel):
     fue_convocado: Optional[bool] = None
-    partido: Optional[str] = None
-    jugador: Optional[str] = None
-    partido_externo: Optional[str] = None
-    jugador_externo: Optional[str] = None
-    id: str
+    partido: Optional[Any] = None
+    jugador: Optional[Any] = None
+    partido_externo: Optional[Any] = None
+    jugador_externo: Optional[Any] = None
+    id: Any
     dorsal: Optional[int] = None
     ensayos: Optional[int] = None
     transformaciones: Optional[int] = None
@@ -308,13 +308,13 @@ class EstadisticasJugadorResponse(EstadisticasJugadorBase):
 
 class AnalisisPartidoBase(BaseModel):
     raw_json: Optional[str] = None
-    partido_id: Optional[str] = None
-    id: str
+    partido_id: Optional[Any] = None
+    id: Any
     video_offset_sec: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    evento_id: Optional[str] = None
-    partido_externo_id: Optional[str] = None
+    evento_id: Optional[Any] = None
+    partido_externo_id: Optional[Any] = None
     video_url: Optional[str] = None
 
 class AnalisisPartidoCreate(AnalisisPartidoBase):
@@ -326,4 +326,3 @@ class AnalisisPartidoUpdate(AnalisisPartidoBase):
 class AnalisisPartidoResponse(AnalisisPartidoBase):
     class Config:
         from_attributes = True
-
