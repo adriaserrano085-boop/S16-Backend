@@ -2,28 +2,27 @@ from pydantic import BaseModel, Field, ConfigDict, AliasChoices
 from typing import Optional, Any, List
 from datetime import datetime, date, time
 
-# Configuración base para todos los esquemas de respuesta
-# Importante: BaseResponse YA HEREDA de BaseModel.
-class BaseResponse(BaseModel):
+# Clase base única para todos los esquemas para evitar problemas de MRO
+class BaseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 # --- ASISTENCIA ---
-class AsistenciaBase(BaseModel):
+class AsistenciaBase(BaseSchema):
     id: Any
     entrenamiento: Optional[Any] = Field(None, validation_alias=AliasChoices("entrenamiento", "entrenamiento_id"), serialization_alias="entrenamiento")
     jugador: Optional[Any] = Field(None, validation_alias=AliasChoices("jugador", "jugador_id"), serialization_alias="jugador")
     asistencia: Optional[str] = None
 
-class AsistenciaCreate(BaseModel):
+class AsistenciaCreate(BaseModel): # Create schemas don't need from_attributes
     entrenamiento_id: Any
     jugador_id: Any
     asistencia: str
 
-class AsistenciaResponse(AsistenciaBase, BaseResponse):
+class AsistenciaResponse(AsistenciaBase):
     pass
 
 # --- ESTADISTICAS PARTIDO ---
-class EstadisticasPartidoBase(BaseModel):
+class EstadisticasPartidoBase(BaseSchema):
     id: Any
     fecha: Optional[date] = None
     marcador_local: Optional[int] = None
@@ -36,11 +35,11 @@ class EstadisticasPartidoBase(BaseModel):
     acta_procesada: Optional[bool] = None
     fecha_procesado: Optional[datetime] = None
 
-class EstadisticasPartidoResponse(EstadisticasPartidoBase, BaseResponse):
+class EstadisticasPartidoResponse(EstadisticasPartidoBase):
     pass
 
 # --- ENTRENAMIENTOS ---
-class EntrenamientosBase(BaseModel):
+class EntrenamientosBase(BaseSchema):
     id_entrenamiento: Any
     evento: Optional[Any] = None
     creado_en: Optional[datetime] = None
@@ -49,11 +48,11 @@ class EntrenamientosBase(BaseModel):
     trabajo_conjunto: Optional[str] = None
     calentamiento: Optional[str] = None
 
-class EntrenamientosResponse(EntrenamientosBase, BaseResponse):
+class EntrenamientosResponse(EntrenamientosBase):
     pass
 
 # --- RIVALES ---
-class RivalesBase(BaseModel):
+class RivalesBase(BaseSchema):
     id_equipo: Any
     nombre_equipo: Optional[str] = None
     escudo: Optional[str] = None
@@ -62,11 +61,11 @@ class RivalesBase(BaseModel):
     temporada: Optional[str] = None
     fecha_creacion: Optional[datetime] = None
 
-class RivalesResponse(RivalesBase, BaseResponse):
+class RivalesResponse(RivalesBase):
     pass
 
 # --- EVENTOS ---
-class EventosBase(BaseModel):
+class EventosBase(BaseSchema):
     id: Any
     fecha: Optional[date] = None
     hora: Optional[time] = None
@@ -75,11 +74,11 @@ class EventosBase(BaseModel):
     observaciones: Optional[str] = None
     created_at: Optional[datetime] = None
 
-class EventosResponse(EventosBase, BaseResponse):
+class EventosResponse(EventosBase):
     pass
 
 # --- PARTIDOS ---
-class PartidosBase(BaseModel):
+class PartidosBase(BaseSchema):
     id: Any
     Rival: Optional[Any] = None
     Evento: Optional[Any] = None
@@ -93,11 +92,11 @@ class PartidosBase(BaseModel):
     observaciones: Optional[str] = None
     acta_url: Optional[str] = None
 
-class PartidosResponse(PartidosBase, BaseResponse):
+class PartidosResponse(PartidosBase):
     pass
 
 # --- PARTIDOS EXTERNOS ---
-class PartidosExternosBase(BaseModel):
+class PartidosExternosBase(BaseSchema):
     id: Any
     equipo_local: Optional[str] = None
     equipo_visitante: Optional[str] = None
@@ -109,11 +108,11 @@ class PartidosExternosBase(BaseModel):
     jornada: Optional[int] = None
     competicion: Optional[str] = None
 
-class PartidosExternosResponse(PartidosExternosBase, BaseResponse):
+class PartidosExternosResponse(PartidosExternosBase):
     pass
 
 # --- ESTADISTICAS JUGADOR ---
-class EstadisticasJugadorBase(BaseModel):
+class EstadisticasJugadorBase(BaseSchema):
     id: Any
     partido: Optional[Any] = None
     jugador: Optional[Any] = None
@@ -132,11 +131,11 @@ class EstadisticasJugadorBase(BaseModel):
     es_titular: Optional[bool] = None
     es_capitan: Optional[bool] = None
 
-class EstadisticasJugadorResponse(EstadisticasJugadorBase, BaseResponse):
+class EstadisticasJugadorResponse(EstadisticasJugadorBase):
     pass
 
 # --- ANALISIS PARTIDO ---
-class AnalisisPartidoBase(BaseModel):
+class AnalisisPartidoBase(BaseSchema):
     id: Any
     partido: Optional[Any] = Field(None, validation_alias=AliasChoices("partido", "partido_id"), serialization_alias="partido")
     evento: Optional[Any] = Field(None, validation_alias=AliasChoices("evento", "evento_id"), serialization_alias="evento")
@@ -145,18 +144,18 @@ class AnalisisPartidoBase(BaseModel):
     video_offset_sec: Optional[int] = None
     raw_json: Optional[str] = None
 
-class AnalisisPartidoResponse(AnalisisPartidoBase, BaseResponse):
+class AnalisisPartidoResponse(AnalisisPartidoBase):
     pass
 
 # --- OTROS ---
-class StaffResponse(BaseResponse): # Corregido: eliminado BaseModel redundante
+class StaffResponse(BaseSchema):
     id: Any
     nombre: Optional[str] = None
     apellidos: Optional[str] = None
     email: Optional[str] = None
     activo: Optional[bool] = None
 
-class JugadoresPropiosResponse(BaseResponse): # Corregido: eliminado BaseModel redundante
+class JugadoresPropiosResponse(BaseSchema):
     id: Any
     nombre: Optional[str] = None
     apellidos: Optional[str] = None
@@ -164,13 +163,22 @@ class JugadoresPropiosResponse(BaseResponse): # Corregido: eliminado BaseModel r
     posiciones: Optional[str] = None
     activo: Optional[bool] = None
 
-class FamiliasResponse(BaseResponse): # Corregido: eliminado BaseModel redundante
+class FamiliasResponse(BaseSchema):
     id_usuario: Any
     nombre_completo: Optional[str] = None
     parentesco: Optional[str] = None
 
-class ConvocatoriaResponse(BaseResponse): # Corregido: eliminado BaseModel redundante
+class ConvocatoriaResponse(BaseSchema):
     id: Any
     partido: Optional[Any] = None
     jugador: Optional[Any] = None
     numero: Optional[float] = None
+
+# Añadido RoleAssignmentRequest y FamilyLinkRequest si son necesarios
+class RoleAssignmentRequest(BaseModel):
+    target_user_id: str
+    new_role: str
+
+class FamilyLinkRequest(BaseModel):
+    family_user_id: str
+    player_user_id: str
