@@ -5,6 +5,7 @@ from typing import List
 
 import models
 import schemas
+import routers_auto
 from database import engine, get_db
 from dependencies import verify_role_assignment, verify_family_link_permission
 
@@ -12,6 +13,7 @@ from dependencies import verify_role_assignment, verify_family_link_permission
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="S16 Rugby App Backup Migration API")
+app.include_router(routers_auto.router, prefix="/api/v1")
 
 # Configure CORS for Vercel Frontend
 origins = [
