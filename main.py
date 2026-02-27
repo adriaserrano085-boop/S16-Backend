@@ -16,6 +16,11 @@ from dependencies import verify_role_assignment, verify_family_link_permission, 
 # models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="S16 Rugby App Backup Migration API")
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "message": "Backend process is running"}
+
 app.include_router(routers_auto.router, prefix="/api/v1")
 
 # Configure CORS for Vercel Frontend
