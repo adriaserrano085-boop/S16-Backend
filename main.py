@@ -28,18 +28,6 @@ async def global_exception_handler(request: Request, exc: Exception):
         }
     )
 
-# Response logging middleware to catch what is being sent
-@app.middleware("http")
-async def log_responses(request: Request, call_next):
-    from fastapi.responses import Response
-    response = await call_next(request)
-    
-    # If it's a 200 OK but not JSON, let's log what it is
-    content_type = response.headers.get("content-type", "")
-    if response.status_code == 200 and "application/json" not in content_type:
-        logger.warning(f"Non-JSON 200 Response for {request.url}: {content_type}")
-        
-    return response
 
 # Storage for diagnostic info
 
