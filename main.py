@@ -128,6 +128,29 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2Passw
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    # --- Dynamic Role Sync (Auto-RBAC) ---
+    target_role = user.role
+    
+    # Rule 1: Master Admin
+    if user.email == "adriserrajime@gmail.com":
+        target_role = models.RoleEnum.ADMIN
+    else:
+        # Rule 2: Check presence in Staff table (models_auto)
+        import models_auto
+        is_staff = db.query(models_auto.Staff).filter(
+            (models_auto.Staff.auth_id == str(user.id))
+        ).first()
+        
+        if is_staff:
+            target_role = models.RoleEnum.STAFF
+    
+    # Update user role if it has changed
+    if user.role != target_role:
+        logger.info(f"Syncing role for {user.email}: {user.role} -> {target_role}")
+        user.role = target_role
+        db.commit()
+        db.refresh(user)
+
     access_token = auth_utils.create_access_token(data={"sub": user.email, "role": user.role})
     
     # Base response
