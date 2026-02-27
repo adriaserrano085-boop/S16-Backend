@@ -1,11 +1,42 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi.responses import JSONResponse
 import os
+import logging
+import traceback
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="S16 Rugby App Backup Migration API")
+
+# Global Exception Handler for 500s
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global Error: {exc}")
+    logger.error(traceback.format_exc())
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal Server Error",
+            "detail": str(exc),
+            "traceback": traceback.format_exc() if os.getenv("DEBUG") else "Secret"
+        }
+    )
+
+# Response logging middleware to catch what is being sent
+@app.middleware("http")
+async def log_responses(request: Request, call_next):
+    response = await call_next(request)
+    if response.status_code == 200 and "application/json" not in response.headers.get("content-type", ""):
+        logger.warning(f"Non-JSON 200 Response for {request.url}: {response.headers.get('content-type')}")
+    return response
+
+# Storage for diagnostic info
 
 # Storage for diagnostic info
 startup_error = None
@@ -35,8 +66,20 @@ def get_startup_error():
     return {"status": "No startup error detected"}
 
 @app.get("/health")
-def health_check():
-    return {"status": "ok", "startup_error": startup_error}
+def health_check(db: Session = Depends(get_db)):
+    db_status = "ok"
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    return {
+        "status": "ok", 
+        "database": db_status,
+        "startup_error": startup_error,
+        "env_port": os.getenv("PORT"),
+        "db_resolved": db_status == "ok"
+    }
 
 @app.get("/ping")
 def ping():
