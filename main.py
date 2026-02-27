@@ -7,7 +7,10 @@ from typing import List
 
 app = FastAPI(title="S16 Rugby App Backup Migration API")
 
-print("Main.py: Starting imports...")
+# Storage for diagnostic info
+startup_error = None
+
+print("Main.py: Loading components...")
 try:
     import models
     import schemas
@@ -15,39 +18,55 @@ try:
     import auth_utils
     from database import engine, get_db
     from dependencies import verify_role_assignment, verify_family_link_permission, get_current_user
-    print("Main.py: Imports successful.")
     
-    # Include legitimate routes
     app.include_router(routers_auto.router, prefix="/api/v1")
+    print("Main.py: All routers included successfully.")
 except Exception as e:
-    print(f"CRITICAL ERROR DURING IMPORTS in main.py: {e}")
+    startup_error = str(e)
     import traceback
-    traceback.print_exc()
-    
-    # Override root to show error
-    @app.get("/")
-    def import_error(): return {"error": "Import failure", "details": str(e)}
+    startup_stack = traceback.format_exc()
+    print(f"CRITICAL ERROR DURING INITIALIZATION: {e}")
+    print(startup_stack)
 
-print("Main.py: Defining basic routes...")
+@app.get("/debug/error")
+def get_startup_error():
+    if startup_error:
+        return {"error": startup_error, "traceback": startup_stack}
+    return {"status": "No startup error detected"}
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "message": "Backend process is running"}
+    return {"status": "ok", "startup_error": startup_error}
 
 @app.get("/ping")
 def ping():
     return "pong"
 
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(404)
+async def custom_404_handler(request, exc):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": "Path not found", 
+            "path": str(request.url), 
+            "startup_error": startup_error,
+            "message": "If startup_error is not null, the API routers failed to load."
+        },
+    )
+
 # Configure CORS for Vercel Frontend
 origins = [
     "http://localhost:3000",
-    "http://localhost:5173", # Vite default
-    "https://s16-nine.vercel.app", # Vercel Frontend
+    "http://localhost:5173",
+    "https://s16-nine.vercel.app",
+    "*", # Temporary wide open for debugging
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"], # Temporary wide open for debugging
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
