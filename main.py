@@ -1,5 +1,8 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import FastAPI, Depends, HTTPException, status, Request, File, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+import shutil
+import uuid
 import os
 import logging
 import traceback
@@ -102,6 +105,44 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Static Files for Uploads
+UPLOAD_DIR = "uploads"
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+@app.post("/api/v1/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Uploads a file to the local uploads directory and returns the public URL.
+    """
+    if current_user.role not in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
+        raise HTTPException(status_code=403, detail="Only Staff/Admin can upload files")
+        
+    try:
+        file_extension = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+        file_path = os.path.join(UPLOAD_DIR, unique_filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # Determine base URL for returning the full path
+        base_url = os.getenv("APP_URL", "") # Railway usually sets this or we can infer it
+        
+        return {
+            "filename": file.filename,
+            "url": f"/uploads/{unique_filename}",
+            "full_url": f"{base_url}/uploads/{unique_filename}" if base_url else f"/uploads/{unique_filename}"
+        }
+    except Exception as e:
+        logger.error(f"Upload error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.on_event("startup")
 def startup_db_check():
