@@ -3,15 +3,13 @@ from typing import Optional, Any, List
 from datetime import datetime, date, time
 
 # Configuración base para todos los esquemas de respuesta
-# Importante: populate_by_name=True permite que el JSON use el alias (ej: "entrenamiento")
-# mientras que from_attributes=True permite leer de objetos SQLAlchemy.
+# Importante: BaseResponse YA HEREDA de BaseModel.
 class BaseResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 # --- ASISTENCIA ---
 class AsistenciaBase(BaseModel):
     id: Any
-    # Mapeamos desde 'entrenamiento_id' en la DB hacia 'entrenamiento' en el JSON
     entrenamiento: Optional[Any] = Field(None, validation_alias=AliasChoices("entrenamiento", "entrenamiento_id"), serialization_alias="entrenamiento")
     jugador: Optional[Any] = Field(None, validation_alias=AliasChoices("jugador", "jugador_id"), serialization_alias="jugador")
     asistencia: Optional[str] = None
@@ -32,7 +30,6 @@ class EstadisticasPartidoBase(BaseModel):
     marcador_visitante: Optional[int] = None
     ensayos_local: Optional[int] = None
     ensayos_visitante: Optional[int] = None
-    # El frontend usa 'partido' y 'partido_externo'
     partido: Optional[Any] = Field(None, validation_alias=AliasChoices("partido", "partido_id"), serialization_alias="partido")
     partido_externo: Optional[Any] = Field(None, validation_alias=AliasChoices("partido_externo", "partido_externo_id"), serialization_alias="partido_externo")
     jornada: Optional[int] = None
@@ -152,14 +149,14 @@ class AnalisisPartidoResponse(AnalisisPartidoBase, BaseResponse):
     pass
 
 # --- OTROS ---
-class StaffResponse(BaseModel, BaseResponse):
+class StaffResponse(BaseResponse): # Corregido: eliminado BaseModel redundante
     id: Any
     nombre: Optional[str] = None
     apellidos: Optional[str] = None
     email: Optional[str] = None
     activo: Optional[bool] = None
 
-class JugadoresPropiosResponse(BaseModel, BaseResponse):
+class JugadoresPropiosResponse(BaseResponse): # Corregido: eliminado BaseModel redundante
     id: Any
     nombre: Optional[str] = None
     apellidos: Optional[str] = None
@@ -167,12 +164,12 @@ class JugadoresPropiosResponse(BaseModel, BaseResponse):
     posiciones: Optional[str] = None
     activo: Optional[bool] = None
 
-class FamiliasResponse(BaseModel, BaseResponse):
+class FamiliasResponse(BaseResponse): # Corregido: eliminado BaseModel redundante
     id_usuario: Any
     nombre_completo: Optional[str] = None
     parentesco: Optional[str] = None
 
-class ConvocatoriaResponse(BaseModel, BaseResponse):
+class ConvocatoriaResponse(BaseResponse): # Corregido: eliminado BaseModel redundante
     id: Any
     partido: Optional[Any] = None
     jugador: Optional[Any] = None
