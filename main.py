@@ -132,7 +132,7 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2Passw
     target_role = user.role
     
     # Rule 1: Master Admin
-    if user.email == "adriserrajime@gmail.com":
+    if user.email.lower() == "adriserrajime@gmail.com":
         target_role = models.RoleEnum.ADMIN
     else:
         # Rule 2: Check presence in Staff table (models_auto)
