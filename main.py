@@ -12,8 +12,8 @@ import auth_utils
 from database import engine, get_db
 from dependencies import verify_role_assignment, verify_family_link_permission, get_current_user
 
-# Create all database tables
-models.Base.metadata.create_all(bind=engine)
+# Create all database tables (Handled in startup event to avoid early crash)
+# models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="S16 Rugby App Backup Migration API")
 app.include_router(routers_auto.router, prefix="/api/v1")
@@ -32,6 +32,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def startup_db_check():
+    print("FastAPI starting up...")
+    try:
+        print("Synchronizing database tables...")
+        models.Base.metadata.create_all(bind=engine)
+        print("Database synchronization successful.")
+    except Exception as e:
+        print(f"CRITICAL: Database synchronization failed: {e}")
+        # We don't raise here to allow the app to serve diagnostic endpoints
 
 @app.get("/")
 def read_root():

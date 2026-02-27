@@ -8,7 +8,13 @@ load_dotenv()
 
 # We will use Neon.tech or a local postgres database.
 # Ensure you set DATABASE_URL in your .env file
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/dbname")
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not SQLALCHEMY_DATABASE_URL:
+    print("WARNING: DATABASE_URL not found in environment variables. Falling back to localhost.")
+    SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost/dbname"
+else:
+    print(f"DATABASE_URL found. Protocol: {SQLALCHEMY_DATABASE_URL.split(':')[0]}")
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
