@@ -15,6 +15,10 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 1 week
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def verify_password(plain_password, hashed_password):
+    # Bcrypt has a 72-character limit. Passlib raises ValueError if exceeded.
+    # We truncate it to 72 to avoid the 500 error and match bcrypt's internal behavior.
+    if plain_password and len(plain_password) > 72:
+        plain_password = plain_password[:72]
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password):
