@@ -131,6 +131,7 @@ def read_root():
     return {"message": "S16 Backend API running"}
 
 @app.post("/token")
+@app.post("/api/v1/token")
 def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
     if not user or not auth_utils.verify_password(form_data.password, user.hashed_password):
@@ -168,6 +169,7 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2Passw
     return response_data
 
 @app.post("/users/assign-role", response_model=schemas.UserResponse)
+@app.post("/api/v1/users/assign-role", response_model=schemas.UserResponse)
 def assign_role(
     request: schemas.RoleAssignmentRequest,
     db: Session = Depends(get_db),
@@ -192,6 +194,7 @@ def assign_role(
     return target_user
 
 @app.get("/users/pending", response_model=List[schemas.UserResponse])
+@app.get("/api/v1/users/pending", response_model=List[schemas.UserResponse])
 def get_pending_users(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
@@ -206,6 +209,7 @@ def get_pending_users(
     return pending_users
 
 @app.post("/users/link-family")
+@app.post("/api/v1/users/link-family")
 def link_family_player(
     request: schemas.FamilyLinkRequest,
     db: Session = Depends(get_db),
