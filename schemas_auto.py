@@ -1,9 +1,10 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, Any
+from typing import Optional, Any, List
 from datetime import datetime, date, time
 
-# Usamos los nombres EXACTOS de la base de datos para evitar problemas de mapeo
-# y configuramos Pydantic para que permita alias si el frontend los necesita.
+# Configuración base para todos los esquemas de respuesta
+class BaseResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 class AsistenciaBase(BaseModel):
     id: Any
@@ -16,8 +17,8 @@ class AsistenciaCreate(BaseModel):
     jugador_id: Any
     asistencia: str
 
-class AsistenciaResponse(AsistenciaBase):
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+class AsistenciaResponse(AsistenciaBase, BaseResponse):
+    pass
 
 class EstadisticasPartidoBase(BaseModel):
     id: Any
@@ -30,19 +31,19 @@ class EstadisticasPartidoBase(BaseModel):
     partido_externo_id: Optional[Any] = Field(None, alias="partido_externo")
     jornada: Optional[int] = None
 
-class EstadisticasPartidoResponse(EstadisticasPartidoBase):
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+class EstadisticasPartidoResponse(EstadisticasPartidoBase, BaseResponse):
+    pass
 
 class EntrenamientosBase(BaseModel):
     id_entrenamiento: Any
     evento: Optional[Any] = None
-    fecha: Optional[date] = None # Aunque no esté en el modelo ORM, lo añadimos si el frontend lo busca
+    fecha: Optional[date] = None
     trabajo_separado: Optional[str] = None
     trabajo_conjunto: Optional[str] = None
     calentamiento: Optional[str] = None
 
-class EntrenamientosResponse(EntrenamientosBase):
-    model_config = ConfigDict(from_attributes=True)
+class EntrenamientosResponse(EntrenamientosBase, BaseResponse):
+    pass
 
 class RivalesBase(BaseModel):
     id_equipo: Any
@@ -52,8 +53,8 @@ class RivalesBase(BaseModel):
     categoria: Optional[str] = None
     temporada: Optional[str] = None
 
-class RivalesResponse(RivalesBase):
-    model_config = ConfigDict(from_attributes=True)
+class RivalesResponse(RivalesBase, BaseResponse):
+    pass
 
 class EventosBase(BaseModel):
     id: Any
@@ -63,8 +64,8 @@ class EventosBase(BaseModel):
     estado: Optional[str] = None
     observaciones: Optional[str] = None
 
-class EventosResponse(EventosBase):
-    model_config = ConfigDict(from_attributes=True)
+class EventosResponse(EventosBase, BaseResponse):
+    pass
 
 class PartidosBase(BaseModel):
     id: Any
@@ -74,8 +75,8 @@ class PartidosBase(BaseModel):
     marcador_local: Optional[float] = None
     marcador_visitante: Optional[float] = None
 
-class PartidosResponse(PartidosBase):
-    model_config = ConfigDict(from_attributes=True)
+class PartidosResponse(PartidosBase, BaseResponse):
+    pass
 
 class PartidosExternosBase(BaseModel):
     id: Any
@@ -85,8 +86,8 @@ class PartidosExternosBase(BaseModel):
     marcador_visitante: Optional[int] = None
     fecha: Optional[date] = None
 
-class PartidosExternosResponse(PartidosExternosBase):
-    model_config = ConfigDict(from_attributes=True)
+class PartidosExternosResponse(PartidosExternosBase, BaseResponse):
+    pass
 
 class EstadisticasJugadorBase(BaseModel):
     id: Any
@@ -98,24 +99,39 @@ class EstadisticasJugadorBase(BaseModel):
     tarjetas_amarillas: Optional[int] = 0
     tarjetas_rojas: Optional[int] = 0
 
-class EstadisticasJugadorResponse(EstadisticasJugadorBase):
-    model_config = ConfigDict(from_attributes=True)
+class EstadisticasJugadorResponse(EstadisticasJugadorBase, BaseResponse):
+    pass
 
-# Esquemas para los otros modelos (mantenemos nombres originales por ahora)
-class StaffResponse(BaseModel):
+class AnalisisPartidoBase(BaseModel):
     id: Any
-    nombre: Optional[str] = None
-    apellidos: Optional[str] = None
-    model_config = ConfigDict(from_attributes=True)
+    partido_id: Optional[Any] = Field(None, alias="partido")
+    evento_id: Optional[Any] = Field(None, alias="evento")
+    partido_externo_id: Optional[Any] = Field(None, alias="partido_externo")
+    video_url: Optional[str] = None
+    video_offset_sec: Optional[int] = None
+    raw_json: Optional[str] = None
 
-class JugadoresPropiosResponse(BaseModel):
+class AnalisisPartidoResponse(AnalisisPartidoBase, BaseResponse):
+    pass
+
+class StaffResponse(BaseModel, BaseResponse):
     id: Any
     nombre: Optional[str] = None
     apellidos: Optional[str] = None
     email: Optional[str] = None
-    model_config = ConfigDict(from_attributes=True)
 
-class FamiliasResponse(BaseModel):
+class JugadoresPropiosResponse(BaseModel, BaseResponse):
+    id: Any
+    nombre: Optional[str] = None
+    apellidos: Optional[str] = None
+    email: Optional[str] = None
+
+class FamiliasResponse(BaseModel, BaseResponse):
     id_usuario: Any
     nombre_completo: Optional[str] = None
-    model_config = ConfigDict(from_attributes=True)
+
+class ConvocatoriaResponse(BaseModel, BaseResponse):
+    id: Any
+    partido: Optional[Any] = None
+    jugador: Optional[Any] = None
+    numero: Optional[float] = None
