@@ -43,6 +43,10 @@ app = FastAPI(title="S16 Rugby App Backup Migration API")
 def health_check():
     return {"status": "ok", "message": "Backend process is running"}
 
+@app.get("/ping")
+def ping():
+    return "pong"
+
 app.include_router(routers_auto.router, prefix="/api/v1")
 
 # Configure CORS for Vercel Frontend
