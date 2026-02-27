@@ -68,7 +68,7 @@ def startup_db_check():
 def read_root():
     return {"message": "S16 Backend API running"}
 
-@app.post("/token", response_model=schemas.Token)
+@app.post("/token")
 def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
     if not user or not auth_utils.verify_password(form_data.password, user.hashed_password):
@@ -78,7 +78,28 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2Passw
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = auth_utils.create_access_token(data={"sub": user.email, "role": user.role})
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    # Base response
+    response_data = {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role
+    }
+
+    # Cross-reference with domain tables to find the specific profile ID (as suggested by user)
+    if user.role == models.RoleEnum.JUGADOR:
+        p = db.query(routers_auto.models.JugadoresPropios).filter(routers_auto.models.JugadoresPropios.email == user.email).first()
+        if p: response_data["playerId"] = p.id
+    elif user.role == models.RoleEnum.STAFF:
+        s = db.query(routers_auto.models.Staff).filter(routers_auto.models.Staff.email == user.email).first()
+        if s: response_data["staffId"] = s.id
+    elif user.role == models.RoleEnum.FAMILIA:
+        f = db.query(routers_auto.models.Familias).filter(routers_auto.models.Familias.id_usuario == str(user.id)).first()
+        if f: response_data["familyId"] = f.id_usuario
+
+    return response_data
 
 @app.post("/users/assign-role", response_model=schemas.UserResponse)
 def assign_role(
