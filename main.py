@@ -5,12 +5,34 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 
-import models
-import schemas
-import routers_auto
-import auth_utils
-from database import engine, get_db
-from dependencies import verify_role_assignment, verify_family_link_permission, get_current_user
+print("Main.py: Starting imports...")
+try:
+    import models
+    import schemas
+    import routers_auto
+    import auth_utils
+    from database import engine, get_db
+    from dependencies import verify_role_assignment, verify_family_link_permission, get_current_user
+    print("Main.py: Imports successful.")
+except Exception as e:
+    print(f"CRITICAL ERROR DURING IMPORTS in main.py: {e}")
+    import traceback
+    traceback.print_exc()
+    # Still create a dummy app to satisfy uvicorn and show error
+    from fastapi import FastAPI
+    app = FastAPI()
+    @app.get("/")
+    def error(): return {"error": "Import failure", "details": str(e)}
+    # Avoid further execution
+    import sys
+    # sys.exit(1) # We could exit, but maybe better to keep alive to see logs? 
+    # Actually uvicorn needs 'app' to be defined.
+
+if 'app' not in globals():
+    from fastapi import FastAPI
+    app = FastAPI()
+
+print("Main.py: Defining app...")
 
 # Create all database tables (Handled in startup event to avoid early crash)
 # models.Base.metadata.create_all(bind=engine)
