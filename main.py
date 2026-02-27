@@ -93,7 +93,11 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2Passw
         p = db.query(routers_auto.models.JugadoresPropios).filter(routers_auto.models.JugadoresPropios.email == user.email).first()
         if p: response_data["playerId"] = p.id
     elif user.role == models.RoleEnum.STAFF:
-        s = db.query(routers_auto.models.Staff).filter(routers_auto.models.Staff.email == user.email).first()
+        # Try finding by auth_id (common for Staff) or email
+        s = db.query(routers_auto.models.Staff).filter(
+            (routers_auto.models.Staff.auth_id == str(user.id)) | 
+            (routers_auto.models.Staff.nombre == user.email) # In some schemas email is stored in name fields temporarily
+        ).first()
         if s: response_data["staffId"] = s.id
     elif user.role == models.RoleEnum.FAMILIA:
         f = db.query(routers_auto.models.Familias).filter(routers_auto.models.Familias.id_usuario == str(user.id)).first()
