@@ -59,13 +59,13 @@ except Exception as e:
     print(f"CRITICAL ERROR DURING INITIALIZATION: {e}")
     print(startup_stack)
 
-@app.get("/debug/error")
-def get_startup_error():
-    if startup_error:
-        return {"error": startup_error, "traceback": startup_stack}
-    return {"status": "No startup error detected"}
+@app.get("/ping")
+@app.get("/api/v1/ping")
+def ping():
+    return JSONResponse(content={"message": "pong"})
 
 @app.get("/health")
+@app.get("/api/v1/health")
 def health_check(db: Session = Depends(get_db)):
     db_status = "ok"
     try:
@@ -81,21 +81,23 @@ def health_check(db: Session = Depends(get_db)):
         "db_resolved": db_status == "ok"
     }
 
-@app.get("/ping")
-def ping():
-    return "pong"
-
-from fastapi.responses import JSONResponse
+@app.get("/debug/error")
+@app.get("/api/v1/debug/error")
+def get_startup_error():
+    return {
+        "startup_error": startup_error, 
+        "traceback": startup_stack if "startup_stack" in globals() else None
+    }
 
 @app.exception_handler(404)
-async def custom_404_handler(request, exc):
+async def custom_404_handler(request: Request, exc):
     return JSONResponse(
         status_code=404,
         content={
             "error": "Path not found", 
             "path": str(request.url), 
             "startup_error": startup_error,
-            "message": "If startup_error is not null, the API routers failed to load."
+            "message": "Verify if you are using the correct prefix (/api/v1/)."
         },
     )
 
