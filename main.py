@@ -1,13 +1,15 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 
 import models
 import schemas
 import routers_auto
+import auth_utils
 from database import engine, get_db
-from dependencies import verify_role_assignment, verify_family_link_permission
+from dependencies import verify_role_assignment, verify_family_link_permission, get_current_user
 
 # Create all database tables
 models.Base.metadata.create_all(bind=engine)
@@ -30,38 +32,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# --- Mock Dependency for Current User ---
-# In a real app, this would extract the JWT token, query the DB and return the current user.
-# For this example, we'll simulate the current user role to test the RBAC rules.
-def get_current_user_role(simulated_role: models.RoleEnum = models.RoleEnum.STAFF):
-    """
-    MOCK function: Returns the role of the user making the request.
-    In real life this depends on the JWT Token in the Authorization header.
-    """
-    return simulated_role
-
-
 @app.get("/")
 def read_root():
     return {"message": "S16 Backend API running"}
+
+@app.post("/token", response_model=schemas.Token)
+def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
+    user = db.query(models.User).filter(models.User.email == form_data.username).first()
+    if not user or not auth_utils.verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = auth_utils.create_access_token(data={"sub": user.email, "role": user.role})
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @app.post("/users/assign-role", response_model=schemas.UserResponse)
 def assign_role(
     request: schemas.RoleAssignmentRequest,
     db: Session = Depends(get_db),
-    # TODO: Replace with actual auth dependency
-    # current_user = Depends(get_current_active_user)
+    current_user: models.User = Depends(get_current_user)
 ):
     """
     Assigns a role to a user. Validates the permissions of the requester.
     """
-    # MOCK: Assuming the current user making the request is STAFF for demonstration.
-    # In reality, extract this from the route's current_user.
-    current_user_role = get_current_user_role(models.RoleEnum.STAFF)
-    
     # 1. Validate if current user can assign the target role
-    verify_role_assignment(current_user_role, request.new_role)
+    verify_role_assignment(current_user.role, request.new_role)
     
     # 2. Find target user
     target_user = db.query(models.User).filter(models.User.id == request.target_user_id).first()

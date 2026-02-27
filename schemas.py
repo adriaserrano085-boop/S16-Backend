@@ -25,3 +25,16 @@ class RoleAssignmentRequest(BaseModel):
 class FamilyLinkRequest(BaseModel):
     family_user_id: int
     player_user_id: int
+
+# --- Auth Schemas ---
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+    role: Optional[str] = None
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
