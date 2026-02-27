@@ -53,22 +53,9 @@ from database import engine, get_db
 from dependencies import verify_role_assignment, verify_family_link_permission, get_current_user
 
 print("Main.py: Loading components...")
-try:
-    import routers_auto
-    app.include_router(routers_auto.router, prefix="/api/v1")
-    print("Main.py: All routers included successfully.")
-except Exception as e:
-    startup_error = str(e)
-    import traceback
-    startup_stack = traceback.format_exc()
-    print(f"CRITICAL ERROR DURING INITIALIZATION: {e}")
-    print(startup_stack)
-except Exception as e:
-    startup_error = str(e)
-    import traceback
-    startup_stack = traceback.format_exc()
-    print(f"CRITICAL ERROR DURING INITIALIZATION: {e}")
-    print(startup_stack)
+import routers_auto
+app.include_router(routers_auto.router, prefix="/api/v1")
+print("Main.py: All routers included successfully.")
 
 @app.get("/ping")
 @app.get("/api/v1/ping")
