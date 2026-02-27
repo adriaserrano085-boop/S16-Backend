@@ -17,9 +17,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar el resto del código del proyecto
 COPY . .
 
-# Exponer el puerto que Render asignará (Render pasa el puerto por variable de entorno)
-ENV PORT=8000
+# Exponer el puerto que Railway asignará (Railway pasa el puerto por variable de entorno)
+ENV PORT=8080
 EXPOSE $PORT
 
 # El comando de inicio para FastAPI usando Uvicorn
-CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]

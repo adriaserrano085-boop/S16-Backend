@@ -36,12 +36,12 @@ def verify_role_assignment(current_user_role: models.RoleEnum, target_role: mode
     """
     
     # Admins can do anything regarding roles
-    if current_user_role == RoleEnum.ADMIN:
+    if current_user_role == models.RoleEnum.ADMIN:
         return True
     
     # Staff restrictions
-    if current_user_role == RoleEnum.STAFF:
-        if target_role in [RoleEnum.ADMIN, RoleEnum.STAFF]:
+    if current_user_role == models.RoleEnum.STAFF:
+        if target_role in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Staff cannot assign ADMIN or STAFF roles."
@@ -55,12 +55,12 @@ def verify_role_assignment(current_user_role: models.RoleEnum, target_role: mode
         detail="You do not have permission to assign roles."
     )
 
-def verify_family_link_permission(current_user_role: RoleEnum):
+def verify_family_link_permission(current_user_role: models.RoleEnum):
     """
     Validates if the current user can link a family member to a player.
     Only ADMIN and STAFF can do this.
     """
-    if current_user_role not in [RoleEnum.ADMIN, RoleEnum.STAFF]:
+    if current_user_role not in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only ADMIN or STAFF can link family members to players."

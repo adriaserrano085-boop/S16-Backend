@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+import os
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -74,14 +75,13 @@ def assign_role(
 
 @app.get("/users/pending", response_model=List[schemas.UserResponse])
 def get_pending_users(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
     """
     Lista de nuevos registros (familias/jugadores) que el Staff debe validar.
     """
-    # Verify if the current user is STAFF or ADMIN to view this list (optional but good practice)
-    current_user_role = get_current_user_role(models.RoleEnum.STAFF)
-    if current_user_role not in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
+    if current_user.role not in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
         
     pending_users = db.query(models.User).filter(models.User.is_pending_validation == True).all()
@@ -90,13 +90,13 @@ def get_pending_users(
 @app.post("/users/link-family")
 def link_family_player(
     request: schemas.FamilyLinkRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
     """
     El rol 'STAFF' puede vincular usuarios JUGADOR y FAMILIA entre sí.
     """
-    current_user_role = get_current_user_role(models.RoleEnum.STAFF)
-    verify_family_link_permission(current_user_role)
+    verify_family_link_permission(current_user.role)
     
     family = db.query(models.User).filter(models.User.id == request.family_user_id).first()
     player = db.query(models.User).filter(models.User.id == request.player_user_id).first()
@@ -124,3 +124,8 @@ def link_family_player(
     db.commit()
     
     return {"message": "Family member successfully linked to player."}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
