@@ -14,7 +14,12 @@ if not SQLALCHEMY_DATABASE_URL:
     print("WARNING: DATABASE_URL not found in environment variables. Falling back to localhost.")
     SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost/dbname"
 else:
-    print(f"DATABASE_URL found. Protocol: {SQLALCHEMY_DATABASE_URL.split(':')[0]}")
+    # Fix for SQLAlchemy 1.4+ which requires postgresql:// instead of postgres://
+    if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+        print("DATABASE_URL prefix fixed: postgres:// -> postgresql://")
+    
+    print(f"DATABASE_URL found and validated. Protocol: {SQLALCHEMY_DATABASE_URL.split(':')[0]}")
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL
