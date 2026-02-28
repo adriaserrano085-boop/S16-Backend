@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
+import uuid
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -246,20 +247,45 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2Passw
         "role": user.role
     }
 
-    # Cross-reference with domain tables to find the specific profile ID (as suggested by user)
-    if user.role == models.RoleEnum.JUGADOR:
-        p = db.query(routers_auto.models.JugadoresPropios).filter(routers_auto.models.JugadoresPropios.email == user.email).first()
-        if p: response_data["playerId"] = p.id
-    elif user.role == models.RoleEnum.STAFF:
-        # Try finding by auth_id (common for Staff) or email
-        s = db.query(routers_auto.models.Staff).filter(
-            (routers_auto.models.Staff.auth_id == str(user.id)) | 
-            (routers_auto.models.Staff.nombre == user.email) # In some schemas email is stored in name fields temporarily
-        ).first()
-        if s: response_data["staffId"] = s.id
-    elif user.role == models.RoleEnum.FAMILIA:
-        f = db.query(routers_auto.models.Familias).filter(routers_auto.models.Familias.id_usuario == str(user.id)).first()
-        if f: response_data["familyId"] = f.id_usuario
+    # Cross-reference with domain tables to find the specific profile ID (robust version)
+    try:
+        import routers_auto
+        
+        # Helper to check if a string is a valid UUID
+        def is_valid_uuid(val):
+            try:
+                if not val: return False
+                uuid.UUID(str(val))
+                return True
+            except ValueError:
+                return False
+
+        if user.role == models.RoleEnum.JUGADOR:
+            p = db.query(routers_auto.models.JugadoresPropios).filter(routers_auto.models.JugadoresPropios.email == user.email).first()
+            if p: response_data["playerId"] = p.id
+        elif user.role == models.RoleEnum.STAFF:
+            # Only query by auth_id if it's a valid UUID to avoid Postgres errors
+            auth_id_str = str(user.id)
+            if is_valid_uuid(auth_id_str):
+                s = db.query(routers_auto.models.Staff).filter(
+                    (routers_auto.models.Staff.auth_id == auth_id_str) | 
+                    (routers_auto.models.Staff.nombre == user.email)
+                ).first()
+            else:
+                # Fallback to just email/name if ID isn't a UUID
+                s = db.query(routers_auto.models.Staff).filter(
+                    routers_auto.models.Staff.nombre == user.email
+                ).first()
+            if s: response_data["staffId"] = s.id
+        elif user.role == models.RoleEnum.FAMILIA:
+            auth_id_str = str(user.id)
+            if is_valid_uuid(auth_id_str):
+                f = db.query(routers_auto.models.Familias).filter(routers_auto.models.Familias.id_usuario == auth_id_str).first()
+                if f: response_data["familyId"] = f.id_usuario
+    except Exception as e:
+        logger.error(f"Error during login profile lookup for {user.email}: {e}")
+        # Not fatal, we still have the token
+        response_data["profile_warning"] = "Could not fetch domain-specific ID"
 
     return response_data
 
@@ -284,6 +310,15 @@ def get_current_user_profile(
     try:
         import routers_auto # Ensure access to domain models
         
+        # Helper to check if a string is a valid UUID
+        def is_valid_uuid(val):
+            try:
+                if not val: return False
+                uuid.UUID(str(val))
+                return True
+            except ValueError:
+                return False
+
         if current_user.role == models.RoleEnum.JUGADOR:
             p = db.query(routers_auto.models.JugadoresPropios).filter(
                 routers_auto.models.JugadoresPropios.email.ilike(current_user.email)
@@ -291,10 +326,17 @@ def get_current_user_profile(
             if p: response_data["playerId"] = p.id
             
         elif current_user.role in [models.RoleEnum.STAFF, models.RoleEnum.ADMIN]:
-            s = db.query(routers_auto.models.Staff).filter(
-                (routers_auto.models.Staff.auth_id == str(current_user.id)) | 
-                (routers_auto.models.Staff.nombre.ilike(current_user.email))
-            ).first()
+            auth_id_str = str(current_user.id)
+            if is_valid_uuid(auth_id_str):
+                s = db.query(routers_auto.models.Staff).filter(
+                    (routers_auto.models.Staff.auth_id == auth_id_str) | 
+                    (routers_auto.models.Staff.nombre.ilike(current_user.email))
+                ).first()
+            else:
+                s = db.query(routers_auto.models.Staff).filter(
+                    routers_auto.models.Staff.nombre.ilike(current_user.email)
+                ).first()
+                
             if s: 
                 response_data["staffId"] = s.id
     except Exception as e:
