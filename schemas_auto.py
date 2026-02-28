@@ -175,6 +175,7 @@ class JugadoresPropiosResponse(BaseSchema):
     posiciones: Optional[str] = None
     talla: Optional[str] = None
     activo: Optional[bool] = None
+    foto: Optional[str] = None
 
 class FamiliasResponse(BaseSchema):
     id_usuario: Any
