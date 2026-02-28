@@ -34,9 +34,18 @@ def read_asistencia(item_id: str, db: Session = Depends(get_db)):
 
 @router.post("/asistencia", response_model=schemas.AsistenciaResponse, tags=["Asistencia"])
 def create_asistencia(item: schemas.AsistenciaCreate, db: Session = Depends(get_db)):
+    # Duplicate check
+    existing = db.query(models.Asistencia).filter(
+        models.Asistencia.entrenamiento_id == item.entrenamiento_id,
+        models.Asistencia.jugador_id == item.jugador_id
+    ).first()
+    if existing:
+        existing.asistencia = item.asistencia
+        db.commit()
+        db.refresh(existing)
+        return existing
+
     db_item = models.Asistencia(**item.model_dump())
-    import uuid
-    if not db_item.id: db_item.id = str(uuid.uuid4())
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
@@ -130,9 +139,18 @@ def read_jugadores_externos_list(skip: int = 0, limit: int = 1000, db: Session =
 @router.post("/jugadores_externos/", response_model=schemas.JugadoresExternosResponse, tags=["JugadoresExternos"])
 @router.post("/jugadores_externos", response_model=schemas.JugadoresExternosResponse, tags=["JugadoresExternos"])
 def create_jugador_externo(item: schemas.JugadoresExternosCreate, db: Session = Depends(get_db)):
-    import uuid
+    # Duplicate check by licencia
+    if item.licencia:
+        existing = db.query(models.JugadoresExternos).filter(models.JugadoresExternos.licencia == item.licencia).first()
+        if existing:
+            # Update existing if needed (optional, user requested "compruebe si no esta duplicado")
+            existing.nombre_completo = item.nombre_completo
+            existing.ultimo_equipo = item.ultimo_equipo
+            db.commit()
+            db.refresh(existing)
+            return existing
+    
     db_item = models.JugadoresExternos(**item.model_dump())
-    if not db_item.id: db_item.id = str(uuid.uuid4())
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
@@ -233,10 +251,35 @@ def read_estadisticas_jugador(item_id: str, db: Session = Depends(get_db)):
 
 @router.post("/estadisticas_jugador", response_model=schemas.EstadisticasJugadorResponse, tags=["EstadisticasJugador"])
 def create_estadisticas_jugador(obj_in: schemas.EstadisticasJugadorCreate, db: Session = Depends(get_db)):
-    import uuid
     obj_data = obj_in.model_dump()
-    if not obj_data.get("id"):
-        obj_data["id"] = str(uuid.uuid4())
+    
+    # Duplicate check logic
+    # We check by (partido or partido_externo) AND (jugador or jugador_externo or licencia or nombre)
+    query = db.query(models.EstadisticasJugador)
+    if obj_data.get("partido"):
+        query = query.filter(models.EstadisticasJugador.partido == obj_data["partido"])
+    elif obj_data.get("partido_externo"):
+        query = query.filter(models.EstadisticasJugador.partido_externo == obj_data["partido_externo"])
+    
+    if obj_data.get("jugador"):
+        query = query.filter(models.EstadisticasJugador.jugador == obj_data["jugador"])
+    elif obj_data.get("jugador_externo"):
+        query = query.filter(models.EstadisticasJugador.jugador_externo == obj_data["jugador_externo"])
+    elif obj_data.get("licencia"):
+        query = query.filter(models.EstadisticasJugador.licencia == obj_data["licencia"])
+    else:
+        query = query.filter(models.EstadisticasJugador.nombre == obj_data["nombre"])
+    
+    existing = query.first()
+    if existing:
+        # Update existing
+        for field, value in obj_data.items():
+            if field != "id":
+                setattr(existing, field, value)
+        db.commit()
+        db.refresh(existing)
+        return existing
+
     db_obj = models.EstadisticasJugador(**obj_data)
     db.add(db_obj)
     db.commit()
@@ -291,17 +334,30 @@ def read_analisis_partido_list(
 
 @router.post("/analisis_partido", response_model=schemas.AnalisisPartidoResponse, tags=["AnalisisPartido"])
 def create_analisis_partido(obj_in: schemas.AnalisisPartidoCreate, db: Session = Depends(get_db)):
-    import uuid
     import json
-    
     obj_data = obj_in.model_dump()
-    if not obj_data.get("id"):
-        obj_data["id"] = str(uuid.uuid4())
+    
+    # Duplicate check
+    query = db.query(models.AnalisisPartido)
+    if obj_data.get("partido_id"):
+        query = query.filter(models.AnalisisPartido.partido_id == obj_data["partido_id"])
+    elif obj_data.get("partido_externo_id"):
+        query = query.filter(models.AnalisisPartido.partido_externo_id == obj_data["partido_externo_id"])
+    
+    existing = query.first()
     
     # Handle raw_json if it's a dict/list
     if obj_data.get("raw_json") is not None and not isinstance(obj_data["raw_json"], str):
         obj_data["raw_json"] = json.dumps(obj_data["raw_json"])
         
+    if existing:
+        for field, value in obj_data.items():
+            if field != "id":
+                setattr(existing, field, value)
+        db.commit()
+        db.refresh(existing)
+        return existing
+
     db_obj = models.AnalisisPartido(**obj_data)
     db.add(db_obj)
     db.commit()
@@ -336,10 +392,24 @@ def read_estadisticas_partido(item_id: str, db: Session = Depends(get_db)):
 
 @router.post("/estadisticas_partido", response_model=schemas.EstadisticasPartidoResponse, tags=["EstadisticasPartido"])
 def create_estadisticas_partido(obj_in: schemas.EstadisticasPartidoCreate, db: Session = Depends(get_db)):
-    import uuid
     obj_data = obj_in.model_dump()
-    if not obj_data.get("id"):
-        obj_data["id"] = str(uuid.uuid4())
+    
+    # Duplicate check
+    query = db.query(models.EstadisticasPartido)
+    if obj_data.get("partido_id"):
+        query = query.filter(models.EstadisticasPartido.partido_id == obj_data["partido_id"])
+    elif obj_data.get("partido_externo_id"):
+        query = query.filter(models.EstadisticasPartido.partido_externo_id == obj_data["partido_externo_id"])
+    
+    existing = query.first()
+    if existing:
+        for field, value in obj_data.items():
+            if field != "id":
+                setattr(existing, field, value)
+        db.commit()
+        db.refresh(existing)
+        return existing
+
     db_obj = models.EstadisticasPartido(**obj_data)
     db.add(db_obj)
     db.commit()
