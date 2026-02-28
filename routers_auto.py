@@ -18,9 +18,9 @@ def read_asistencia_list(
 ):
     query = db.query(models.Asistencia)
     if entrenamiento:
-        query = query.filter(models.Asistencia.entrenamiento_id == entrenamiento)
+        query = query.filter(models.Asistencia.entrenamiento == entrenamiento)
     if jugador:
-        query = query.filter(models.Asistencia.jugador_id == jugador)
+        query = query.filter(models.Asistencia.jugador == jugador)
     return query.offset(skip).limit(limit).all()
 
 @router.get("/asistencia/{item_id}", response_model=schemas.AsistenciaResponse, tags=["Asistencia"])
