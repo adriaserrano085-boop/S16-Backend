@@ -8,6 +8,7 @@ import os
 import logging
 import traceback
 from fastapi.middleware.cors import CORSMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
@@ -17,7 +18,10 @@ import uuid
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="S16 Rugby App Backup Migration API")
+app = FastAPI(
+    title="S16 Rugby App Backup Migration API",
+    redirect_slashes=False
+)
 
 # Global Exception Handler for 500s
 @app.exception_handler(Exception)
@@ -134,6 +138,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Middleware for proxy headers (Railway/Vercel)
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 # Static Files for Uploads
 UPLOAD_DIR = "uploads"

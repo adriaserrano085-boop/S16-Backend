@@ -8,7 +8,7 @@ from database import get_db
 router = APIRouter()
 
 # --- CRUD for Asistencia ---
-@router.get("/asistencia/", response_model=List[schemas.AsistenciaResponse], tags=["Asistencia"])
+@router.get("/asistencia", response_model=List[schemas.AsistenciaResponse], tags=["Asistencia"])
 def read_asistencia_list(
     skip: int = 0, 
     limit: int = 100, 
@@ -29,7 +29,7 @@ def read_asistencia(item_id: str, db: Session = Depends(get_db)):
     if not item: raise HTTPException(status_code=404, detail="Item not found")
     return item
 
-@router.post("/asistencia/", response_model=schemas.AsistenciaResponse, tags=["Asistencia"])
+@router.post("/asistencia", response_model=schemas.AsistenciaResponse, tags=["Asistencia"])
 def create_asistencia(item: schemas.AsistenciaCreate, db: Session = Depends(get_db)):
     db_item = models.Asistencia(**item.model_dump())
     import uuid
@@ -40,7 +40,7 @@ def create_asistencia(item: schemas.AsistenciaCreate, db: Session = Depends(get_
     return db_item
 
 # --- CRUD for EstadisticasPartido ---
-@router.get("/estadisticas_partido/", response_model=List[schemas.EstadisticasPartidoResponse], tags=["EstadisticasPartido"])
+@router.get("/estadisticas_partido", response_model=List[schemas.EstadisticasPartidoResponse], tags=["EstadisticasPartido"])
 def read_estadisticas_partido_list(
     skip: int = 0, 
     limit: int = 100, 
@@ -53,7 +53,7 @@ def read_estadisticas_partido_list(
     return query.offset(skip).limit(limit).all()
 
 # --- CRUD for Entrenamientos ---
-@router.get("/entrenamientos/", response_model=List[schemas.EntrenamientosResponse], tags=["Entrenamientos"])
+@router.get("/entrenamientos", response_model=List[schemas.EntrenamientosResponse], tags=["Entrenamientos"])
 def read_entrenamientos_list(
     skip: int = 0, 
     limit: int = 100, 
@@ -72,7 +72,7 @@ def read_entrenamientos(item_id: str, db: Session = Depends(get_db)):
     return item
 
 # --- CRUD for Rivales ---
-@router.get("/rivales/", response_model=List[schemas.RivalesResponse], tags=["Rivales"])
+@router.get("/rivales", response_model=List[schemas.RivalesResponse], tags=["Rivales"])
 def read_rivales_list(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(models.Rivales).offset(skip).limit(limit).all()
 
@@ -83,7 +83,7 @@ def read_rivales(item_id: str, db: Session = Depends(get_db)):
     return item
 
 # --- CRUD for JugadoresPropios ---
-@router.get("/jugadores_propios/", response_model=List[schemas.JugadoresPropiosResponse], tags=["JugadoresPropios"])
+@router.get("/jugadores_propios", response_model=List[schemas.JugadoresPropiosResponse], tags=["JugadoresPropios"])
 def read_jugadores_propios_list(
     skip: int = 0, 
     limit: int = 100, 
@@ -96,7 +96,7 @@ def read_jugadores_propios_list(
     return query.offset(skip).limit(limit).all()
 
 # --- CRUD for Eventos ---
-@router.get("/eventos/", response_model=List[schemas.EventosResponse], tags=["Eventos"])
+@router.get("/eventos", response_model=List[schemas.EventosResponse], tags=["Eventos"])
 def read_eventos_list(
     skip: int = 0, 
     limit: int = 100, 
@@ -109,7 +109,7 @@ def read_eventos_list(
     return query.offset(skip).limit(limit).all()
 
 # --- CRUD for Partidos ---
-@router.get("/partidos/", response_model=List[schemas.PartidosResponse], tags=["Partidos"])
+@router.get("/partidos", response_model=List[schemas.PartidosResponse], tags=["Partidos"])
 def read_partidos_list(
     skip: int = 0, 
     limit: int = 100, 
@@ -125,12 +125,12 @@ def read_partidos_list(
     return query.offset(skip).limit(limit).all()
 
 # --- CRUD for PartidosExternos ---
-@router.get("/partidos_externos/", response_model=List[schemas.PartidosExternosResponse], tags=["PartidosExternos"])
+@router.get("/partidos_externos", response_model=List[schemas.PartidosExternosResponse], tags=["PartidosExternos"])
 def read_partidos_externos_list(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(models.PartidosExternos).offset(skip).limit(limit).all()
 
 # --- CRUD for EstadisticasJugador ---
-@router.get("/estadisticas_jugador/", response_model=List[schemas.EstadisticasJugadorResponse], tags=["EstadisticasJugador"])
+@router.get("/estadisticas_jugador", response_model=List[schemas.EstadisticasJugadorResponse], tags=["EstadisticasJugador"])
 def read_estadisticas_jugador_list(
     skip: int = 0, 
     limit: int = 100, 
@@ -146,7 +146,7 @@ def read_estadisticas_jugador_list(
     return query.offset(skip).limit(limit).all()
 
 # --- CRUD for AnalisisPartido ---
-@router.get("/analisis_partido/", response_model=List[schemas.AnalisisPartidoResponse], tags=["AnalisisPartido"])
+@router.get("/analisis_partido", response_model=List[schemas.AnalisisPartidoResponse], tags=["AnalisisPartido"])
 def read_analisis_partido_list(
     skip: int = 0, 
     limit: int = 100, 
