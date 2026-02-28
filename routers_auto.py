@@ -16,7 +16,10 @@ def read_asistencia_list(
     jugador: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    query = db.query(models.Asistencia)
+    query = db.query(models.Asistencia).options(
+        joinedload(models.Asistencia.entrenamientos),
+        joinedload(models.Asistencia.jugadores)
+    )
     if entrenamiento:
         query = query.filter(models.Asistencia.entrenamiento_id == entrenamiento)
     if jugador:

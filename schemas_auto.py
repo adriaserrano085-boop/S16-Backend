@@ -19,7 +19,8 @@ class AsistenciaCreate(BaseModel): # Create schemas don't need from_attributes
     asistencia: str
 
 class AsistenciaResponse(AsistenciaBase):
-    pass
+    entrenamientos: Optional['EntrenamientosResponse'] = None
+    jugadores: Optional['JugadoresPropiosResponse'] = None
 
 # --- ESTADISTICAS PARTIDO ---
 class EstadisticasPartidoBase(BaseSchema):
@@ -187,3 +188,5 @@ class FamilyLinkRequest(BaseModel):
     player_user_id: str
 
 EventosResponse.model_rebuild()
+AsistenciaResponse.model_rebuild()
+

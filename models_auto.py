@@ -5,9 +5,13 @@ from database import Base
 class Asistencia(Base):
     __tablename__ = "asistencia"
     id = Column(String, primary_key=True)
-    entrenamiento_id = Column(String)
-    jugador_id = Column(String)
+    entrenamiento_id = Column(String, ForeignKey("entrenamientos.id_entrenamiento"))
+    jugador_id = Column(String, ForeignKey("jugadores_propios.id"))
     asistencia = Column(String)
+
+    # Relaciones
+    entrenamientos = relationship("Entrenamientos")
+    jugadores = relationship("JugadoresPropios")
 
 class EstadisticasPartido(Base):
     __tablename__ = "estadisticas_partido"
