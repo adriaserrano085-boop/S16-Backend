@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request, File, UploadFile
+from sqlalchemy import inspect
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import shutil
@@ -90,6 +91,20 @@ def get_startup_error():
         "startup_error": startup_error, 
         "traceback": startup_stack if "startup_stack" in globals() else None
     }
+
+@app.get("/debug/tables")
+@app.get("/api/v1/debug/tables")
+def list_tables(db: Session = Depends(get_db)):
+    """
+    Diagnostic endpoint to list all tables in the database.
+    """
+    try:
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        return {"tables": tables}
+    except Exception as e:
+        logger.error(f"Error inspecting tables: {e}")
+        return {"error": str(e)}
 
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc):
@@ -265,22 +280,27 @@ def get_current_user_profile(
         "is_pending_validation": current_user.is_pending_validation
     }
     
-    # Add domain-specific IDs
-    import routers_auto # Ensure access to domain models
-    
-    if current_user.role == models.RoleEnum.JUGADOR:
-        p = db.query(routers_auto.models.JugadoresPropios).filter(
-            routers_auto.models.JugadoresPropios.email.ilike(current_user.email)
-        ).first()
-        if p: response_data["playerId"] = p.id
+    # Add domain-specific IDs with robust error handling
+    try:
+        import routers_auto # Ensure access to domain models
         
-    elif current_user.role in [models.RoleEnum.STAFF, models.RoleEnum.ADMIN]:
-        s = db.query(routers_auto.models.Staff).filter(
-            (routers_auto.models.Staff.auth_id == str(current_user.id)) | 
-            (routers_auto.models.Staff.nombre.ilike(current_user.email))
-        ).first()
-        if s: 
-            response_data["staffId"] = s.id
+        if current_user.role == models.RoleEnum.JUGADOR:
+            p = db.query(routers_auto.models.JugadoresPropios).filter(
+                routers_auto.models.JugadoresPropios.email.ilike(current_user.email)
+            ).first()
+            if p: response_data["playerId"] = p.id
+            
+        elif current_user.role in [models.RoleEnum.STAFF, models.RoleEnum.ADMIN]:
+            s = db.query(routers_auto.models.Staff).filter(
+                (routers_auto.models.Staff.auth_id == str(current_user.id)) | 
+                (routers_auto.models.Staff.nombre.ilike(current_user.email))
+            ).first()
+            if s: 
+                response_data["staffId"] = s.id
+    except Exception as e:
+        logger.error(f"Error fetching domain profile for {current_user.email}: {e}")
+        # We don't raise here, we just return the base user info
+        response_data["profile_error"] = str(e)
             
     return response_data
 
