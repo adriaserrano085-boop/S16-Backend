@@ -22,7 +22,9 @@ else:
     print(f"DATABASE_URL found and validated. Protocol: {SQLALCHEMY_DATABASE_URL.split(':')[0]}")
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL
+    SQLALCHEMY_DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
