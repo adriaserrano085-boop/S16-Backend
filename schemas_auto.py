@@ -75,7 +75,9 @@ class EventosBase(BaseSchema):
     created_at: Optional[datetime] = None
 
 class EventosResponse(EventosBase):
-    pass
+    partido: Optional['PartidosResponse'] = None
+    entrenamiento: Optional['EntrenamientosResponse'] = None
+    analisis: Optional['AnalisisPartidoResponse'] = None
 
 # --- PARTIDOS ---
 class PartidosBase(BaseSchema):
@@ -182,3 +184,5 @@ class RoleAssignmentRequest(BaseModel):
 class FamilyLinkRequest(BaseModel):
     family_user_id: str
     player_user_id: str
+
+EventosResponse.model_rebuild()

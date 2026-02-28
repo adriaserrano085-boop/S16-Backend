@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 import models_auto as models
 import schemas_auto as schemas
@@ -103,7 +103,11 @@ def read_eventos_list(
     tipo: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    query = db.query(models.Eventos)
+    query = db.query(models.Eventos).options(
+        joinedload(models.Eventos.partido),
+        joinedload(models.Eventos.entrenamiento),
+        joinedload(models.Eventos.analisis)
+    )
     if tipo:
         query = query.filter(models.Eventos.tipo == tipo)
     return query.offset(skip).limit(limit).all()

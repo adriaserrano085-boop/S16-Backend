@@ -29,9 +29,12 @@ class Entrenamientos(Base):
     actualizado_en = Column(DateTime(timezone=True))
     trabajo_separado = Column(String)
     id_entrenamiento = Column(String, primary_key=True)
-    evento = Column(String)
+    evento = Column(String, ForeignKey("eventos.id"))
     trabajo_conjunto = Column(String)
     calentamiento = Column(String)
+
+    # Relación inversa a Eventos
+    evento_ref = relationship("Eventos", back_populates="entrenamiento")
 
 class Rivales(Base):
     __tablename__ = "rivales"
@@ -111,6 +114,11 @@ class Eventos(Base):
     estado = Column(String)
     observaciones = Column(String)
 
+    # Relaciones hacia Partidos y Entrenamientos (uselist=False porque es 1-a-1)
+    partido = relationship("Partidos", back_populates="evento_ref", uselist=False)
+    entrenamiento = relationship("Entrenamientos", back_populates="evento_ref", uselist=False)
+    analisis = relationship("AnalisisPartido", back_populates="evento_ref", uselist=False)
+
 class Partidos(Base):
     __tablename__ = "partidos"
     id = Column(String, primary_key=True)
@@ -120,11 +128,16 @@ class Partidos(Base):
     jornada = Column(Integer)
     marcador_local = Column(Float)
     marcador_visitante = Column(Float)
-    Rival = Column(String)
-    Evento = Column(String)
+    Rival = Column(String, ForeignKey("rivales.id_equipo"))
+    Evento = Column(String, ForeignKey("eventos.id"))
     lugar = Column(String)
     observaciones = Column(String)
     acta_url = Column(String)
+
+    # Relación inversa a Eventos
+    evento_ref = relationship("Eventos", back_populates="partido")
+    # Relación a Rivales
+    rival_ref = relationship("Rivales")
 
 class PartidosExternos(Base):
     __tablename__ = "partidos_externos"
@@ -183,12 +196,14 @@ class EstadisticasJugador(Base):
 class AnalisisPartido(Base):
     __tablename__ = "analisis_partido"
     raw_json = Column(String)
-    partido_id = Column(String)
+    partido_id = Column(String, ForeignKey("partidos.id"))
     id = Column(String, primary_key=True)
     video_offset_sec = Column(Integer)
     created_at = Column(DateTime(timezone=True))
     updated_at = Column(DateTime(timezone=True))
-    evento_id = Column(String)
-    partido_externo_id = Column(String)
+    evento_id = Column(String, ForeignKey("eventos.id"))
+    partido_externo_id = Column(String, ForeignKey("partidos_externos.id"))
     video_url = Column(String)
+    
+    evento_ref = relationship("Eventos", back_populates="analisis")
 
