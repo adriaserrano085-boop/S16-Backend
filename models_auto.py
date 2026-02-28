@@ -5,8 +5,8 @@ from database import Base
 class Asistencia(Base):
     __tablename__ = "asistencia"
     id = Column(String, primary_key=True)
-    entrenamiento = Column(String)
-    jugador = Column(String)
+    entrenamiento_id = Column(String)
+    jugador_id = Column(String)
     asistencia = Column(String)
 
 class EstadisticasPartido(Base):
