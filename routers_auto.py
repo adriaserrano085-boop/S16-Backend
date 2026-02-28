@@ -169,13 +169,19 @@ def read_estadisticas_jugador_list(
 @router.get("/analisis_partido", response_model=List[schemas.AnalisisPartidoResponse], tags=["AnalisisPartido"])
 def read_analisis_partido_list(
     skip: int = 0, 
-    limit: int = 100, 
+    limit: int = 1000, 
     partido: Optional[str] = None,
+    partido_externo: Optional[str] = None,
+    evento: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     query = db.query(models.AnalisisPartido)
     if partido:
         query = query.filter(models.AnalisisPartido.partido_id == partido)
+    if partido_externo:
+        query = query.filter(models.AnalisisPartido.partido_externo_id == partido_externo)
+    if evento:
+        query = query.filter(models.AnalisisPartido.evento_id == evento)
     return query.offset(skip).limit(limit).all()
 
 # Re-incorporar el resto de métodos CRUD básicos simplificados
