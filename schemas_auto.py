@@ -96,7 +96,8 @@ class PartidosBase(BaseSchema):
     acta_url: Optional[str] = None
 
 class PartidosResponse(PartidosBase):
-    pass
+    estadisticas_partido: Optional[List['EstadisticasPartidoResponse']] = []
+    estadisticas_jugador: Optional[List['EstadisticasJugadorResponse']] = []
 
 # --- PARTIDOS EXTERNOS ---
 class PartidosExternosBase(BaseSchema):
@@ -112,7 +113,8 @@ class PartidosExternosBase(BaseSchema):
     competicion: Optional[str] = None
 
 class PartidosExternosResponse(PartidosExternosBase):
-    pass
+    estadisticas_partido: Optional[List['EstadisticasPartidoResponse']] = []
+    estadisticas_jugador: Optional[List['EstadisticasJugadorResponse']] = []
 
 # --- ESTADISTICAS JUGADOR ---
 class EstadisticasJugadorBase(BaseSchema):
@@ -189,4 +191,6 @@ class FamilyLinkRequest(BaseModel):
 
 EventosResponse.model_rebuild()
 AsistenciaResponse.model_rebuild()
+PartidosResponse.model_rebuild()
+PartidosExternosResponse.model_rebuild()
 

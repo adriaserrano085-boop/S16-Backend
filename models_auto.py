@@ -23,9 +23,12 @@ class EstadisticasPartido(Base):
     fecha_procesado = Column(DateTime(timezone=True))
     marcador_local = Column(Integer)
     marcador_visitante = Column(Integer)
-    partido_id = Column(String)
-    partido_externo_id = Column(String)
+    partido_id = Column(String, ForeignKey("partidos.id"))
+    partido_externo_id = Column(String, ForeignKey("partidos_externos.id"))
     id = Column(String, primary_key=True)
+
+    partido_ref = relationship("Partidos", back_populates="estadisticas_partido")
+    partido_externo_ref = relationship("PartidosExternos", back_populates="estadisticas_partido")
 
 class Entrenamientos(Base):
     __tablename__ = "entrenamientos"
@@ -85,6 +88,8 @@ class JugadoresPropios(Base):
     foto = Column(String)
     email = Column(String)
 
+    estadisticas_jugador = relationship("EstadisticasJugador", back_populates="jugador_ref")
+
 class Familias(Base):
     __tablename__ = "familias"
     updated_at = Column(DateTime(timezone=True))
@@ -142,6 +147,9 @@ class Partidos(Base):
     evento_ref = relationship("Eventos", back_populates="partido")
     # Relación a Rivales
     rival_ref = relationship("Rivales")
+    
+    estadisticas_partido = relationship("EstadisticasPartido", back_populates="partido_ref")
+    estadisticas_jugador = relationship("EstadisticasJugador", back_populates="partido_ref")
 
 class PartidosExternos(Base):
     __tablename__ = "partidos_externos"
@@ -156,6 +164,9 @@ class PartidosExternos(Base):
     equipo_local = Column(String)
     equipo_visitante = Column(String)
     competicion = Column(String)
+
+    estadisticas_partido = relationship("EstadisticasPartido", back_populates="partido_externo_ref")
+    estadisticas_jugador = relationship("EstadisticasJugador", back_populates="partido_externo_ref")
 
 class Convocatoria(Base):
     __tablename__ = "convocatoria"
@@ -178,9 +189,9 @@ class JugadorFamilia(Base):
 class EstadisticasJugador(Base):
     __tablename__ = "estadisticas_jugador"
     fue_convocado = Column(Boolean)
-    partido = Column(String)
-    jugador = Column(String)
-    partido_externo = Column(String)
+    partido = Column(String, ForeignKey("partidos.id"))
+    jugador = Column(String, ForeignKey("jugadores_propios.id"))
+    partido_externo = Column(String, ForeignKey("partidos_externos.id"))
     jugador_externo = Column(String)
     id = Column(String, primary_key=True)
     dorsal = Column(Integer)
@@ -196,6 +207,10 @@ class EstadisticasJugador(Base):
     equipo = Column(String)
     licencia = Column(String)
     nombre = Column(String)
+
+    partido_ref = relationship("Partidos", back_populates="estadisticas_jugador")
+    partido_externo_ref = relationship("PartidosExternos", back_populates="estadisticas_jugador")
+    jugador_ref = relationship("JugadoresPropios", back_populates="estadisticas_jugador")
 
 class AnalisisPartido(Base):
     __tablename__ = "analisis_partido"

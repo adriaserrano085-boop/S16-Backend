@@ -124,7 +124,10 @@ def read_partidos_list(
     evento: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    query = db.query(models.Partidos)
+    query = db.query(models.Partidos).options(
+        joinedload(models.Partidos.estadisticas_partido),
+        joinedload(models.Partidos.estadisticas_jugador)
+    )
     if rival:
         query = query.filter(models.Partidos.Rival == rival)
     if evento:
@@ -134,7 +137,11 @@ def read_partidos_list(
 # --- CRUD for PartidosExternos ---
 @router.get("/partidos_externos", response_model=List[schemas.PartidosExternosResponse], tags=["PartidosExternos"])
 def read_partidos_externos_list(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return db.query(models.PartidosExternos).offset(skip).limit(limit).all()
+    query = db.query(models.PartidosExternos).options(
+        joinedload(models.PartidosExternos.estadisticas_partido),
+        joinedload(models.PartidosExternos.estadisticas_jugador)
+    )
+    return query.offset(skip).limit(limit).all()
 
 # --- CRUD for EstadisticasJugador ---
 @router.get("/estadisticas_jugador", response_model=List[schemas.EstadisticasJugadorResponse], tags=["EstadisticasJugador"])
