@@ -144,7 +144,7 @@ class AnalisisPartidoBase(BaseSchema):
     partido_externo: Optional[Any] = Field(None, validation_alias=AliasChoices("partido_externo", "partido_externo_id"), serialization_alias="partido_externo")
     video_url: Optional[str] = None
     video_offset_sec: Optional[int] = None
-    raw_json: Optional[str] = None
+    raw_json: Optional[Any] = None
 
 class AnalisisPartidoResponse(AnalisisPartidoBase):
     pass
