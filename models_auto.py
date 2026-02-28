@@ -27,6 +27,22 @@ class EstadisticasPartido(Base):
     partido_externo_id = Column(String, ForeignKey("partidos_externos.id"))
     id = Column(String, primary_key=True)
 
+    # Advanced Metrics
+    posesion_local = Column(Integer)
+    posesion_visitante = Column(Integer)
+    placajes_hechos_local = Column(Integer)
+    placajes_hechos_visitante = Column(Integer)
+    placajes_fallados_local = Column(Integer)
+    placajes_fallados_visitante = Column(Integer)
+    mele_ganada_local = Column(Integer)
+    mele_ganada_visitante = Column(Integer)
+    mele_perdida_local = Column(Integer)
+    mele_perdida_visitante = Column(Integer)
+    touch_ganada_local = Column(Integer)
+    touch_ganada_visitante = Column(Integer)
+    touch_perdida_local = Column(Integer)
+    touch_perdida_visitante = Column(Integer)
+
     partido_ref = relationship("Partidos", back_populates="estadisticas_partido")
     partido_externo_ref = relationship("PartidosExternos", back_populates="estadisticas_partido")
 

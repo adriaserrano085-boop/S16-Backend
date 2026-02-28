@@ -36,8 +36,73 @@ class EstadisticasPartidoBase(BaseSchema):
     acta_procesada: Optional[bool] = None
     fecha_procesado: Optional[datetime] = None
 
+    # Advanced Metrics
+    posesion_local: Optional[int] = None
+    posesion_visitante: Optional[int] = None
+    placajes_hechos_local: Optional[int] = None
+    placajes_hechos_visitante: Optional[int] = None
+    placajes_fallados_local: Optional[int] = None
+    placajes_fallados_visitante: Optional[int] = None
+    mele_ganada_local: Optional[int] = None
+    mele_ganada_visitante: Optional[int] = None
+    mele_perdida_local: Optional[int] = None
+    mele_perdida_visitante: Optional[int] = None
+    touch_ganada_local: Optional[int] = None
+    touch_ganada_visitante: Optional[int] = None
+    touch_perdida_local: Optional[int] = None
+    touch_perdida_visitante: Optional[int] = None
+
 class EstadisticasPartidoResponse(EstadisticasPartidoBase):
     pass
+
+class EstadisticasPartidoCreate(BaseModel):
+    id: Optional[str] = None
+    fecha: Optional[date] = None
+    marcador_local: Optional[int] = None
+    marcador_visitante: Optional[int] = None
+    ensayos_local: Optional[int] = None
+    ensayos_visitante: Optional[int] = None
+    partido_id: Optional[str] = None
+    partido_externo_id: Optional[str] = None
+    jornada: Optional[int] = None
+    acta_procesada: Optional[bool] = None
+    posesion_local: Optional[int] = None
+    posesion_visitante: Optional[int] = None
+    placajes_hechos_local: Optional[int] = None
+    placajes_hechos_visitante: Optional[int] = None
+    placajes_fallados_local: Optional[int] = None
+    placajes_fallados_visitante: Optional[int] = None
+    mele_ganada_local: Optional[int] = None
+    mele_ganada_visitante: Optional[int] = None
+    mele_perdida_local: Optional[int] = None
+    mele_perdida_visitante: Optional[int] = None
+    touch_ganada_local: Optional[int] = None
+    touch_ganada_visitante: Optional[int] = None
+    touch_perdida_local: Optional[int] = None
+    touch_perdida_visitante: Optional[int] = None
+
+class EstadisticasPartidoUpdate(BaseModel):
+    marcador_local: Optional[int] = None
+    marcador_visitante: Optional[int] = None
+    ensayos_local: Optional[int] = None
+    ensayos_visitante: Optional[int] = None
+    jornada: Optional[int] = None
+    acta_procesada: Optional[bool] = None
+    fecha: Optional[date] = None
+    posesion_local: Optional[int] = None
+    posesion_visitante: Optional[int] = None
+    placajes_hechos_local: Optional[int] = None
+    placajes_hechos_visitante: Optional[int] = None
+    placajes_fallados_local: Optional[int] = None
+    placajes_fallados_visitante: Optional[int] = None
+    mele_ganada_local: Optional[int] = None
+    mele_ganada_visitante: Optional[int] = None
+    mele_perdida_local: Optional[int] = None
+    mele_perdida_visitante: Optional[int] = None
+    touch_ganada_local: Optional[int] = None
+    touch_ganada_visitante: Optional[int] = None
+    touch_perdida_local: Optional[int] = None
+    touch_perdida_visitante: Optional[int] = None
 
 # --- ENTRENAMIENTOS ---
 class EntrenamientosBase(BaseSchema):
@@ -158,6 +223,20 @@ class AnalisisPartidoBase(BaseSchema):
 
 class AnalisisPartidoResponse(AnalisisPartidoBase):
     pass
+
+class AnalisisPartidoCreate(BaseModel):
+    id: Optional[str] = None
+    partido_id: Optional[str] = None
+    evento_id: Optional[str] = None
+    partido_externo_id: Optional[str] = None
+    video_url: Optional[str] = None
+    video_offset_sec: Optional[int] = None
+    raw_json: Optional[Any] = None
+
+class AnalisisPartidoUpdate(BaseModel):
+    video_url: Optional[str] = None
+    video_offset_sec: Optional[int] = None
+    raw_json: Optional[Any] = None
 
 # --- OTROS ---
 class StaffResponse(BaseSchema):
