@@ -163,6 +163,7 @@ class JugadoresPropiosResponse(BaseSchema):
     apellidos: Optional[str] = None
     email: Optional[str] = None
     posiciones: Optional[str] = None
+    talla: Optional[str] = None
     activo: Optional[bool] = None
 
 class FamiliasResponse(BaseSchema):
