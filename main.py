@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="S16 Rugby App Backup Migration API",
-    redirect_slashes=False
+    redirect_slashes=True
 )
 
 # Global Exception Handler for 500s
@@ -48,6 +48,43 @@ import schemas
 import auth_utils
 from database import engine, get_db
 from dependencies import verify_role_assignment, verify_family_link_permission, get_current_user
+
+# Move Upload route here, before routers_auto, for maximum priority
+@app.post("/upload")
+@app.post("/api/v1/upload")
+async def upload_file(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Uploads a file to the local uploads directory and returns the public URL.
+    """
+    if current_user.role not in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
+        raise HTTPException(status_code=403, detail="Only Staff/Admin can upload files")
+        
+    try:
+        if not os.path.exists(UPLOAD_DIR):
+            os.makedirs(UPLOAD_DIR)
+            
+        file_extension = os.path.splitext(file.filename)[1]
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+        file_path = os.path.join(UPLOAD_DIR, unique_filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # Determine base URL for returning the full path
+        # Railway usually sets this via APP_URL or we can use the request host
+        base_url = os.getenv("APP_URL", "") 
+        
+        return {
+            "filename": file.filename,
+            "url": f"/uploads/{unique_filename}",
+            "full_url": f"{base_url}/uploads/{unique_filename}" if base_url else f"/uploads/{unique_filename}"
+        }
+    except Exception as e:
+        logger.error(f"Upload error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 print("Main.py: Loading components...")
 import routers_auto
@@ -149,36 +186,8 @@ if not os.path.exists(UPLOAD_DIR):
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-@app.post("/api/v1/upload")
-async def upload_file(
-    file: UploadFile = File(...),
-    current_user: models.User = Depends(get_current_user)
-):
-    """
-    Uploads a file to the local uploads directory and returns the public URL.
-    """
-    if current_user.role not in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
-        raise HTTPException(status_code=403, detail="Only Staff/Admin can upload files")
-        
-    try:
-        file_extension = os.path.splitext(file.filename)[1]
-        unique_filename = f"{uuid.uuid4()}{file_extension}"
-        file_path = os.path.join(UPLOAD_DIR, unique_filename)
-        
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
-        # Determine base URL for returning the full path
-        base_url = os.getenv("APP_URL", "") # Railway usually sets this or we can infer it
-        
-        return {
-            "filename": file.filename,
-            "url": f"/uploads/{unique_filename}",
-            "full_url": f"{base_url}/uploads/{unique_filename}" if base_url else f"/uploads/{unique_filename}"
-        }
-    except Exception as e:
-        logger.error(f"Upload error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# Route moved up for priority
+
 
 @app.on_event("startup")
 def startup_db_check():
