@@ -158,8 +158,19 @@ class PartidosBase(BaseSchema):
     Rival: Optional[Any] = None
     Evento: Optional[Any] = None
     es_local: Optional[bool] = None
-    marcador_local: Optional[float] = None
-    marcador_visitante: Optional[float] = None
+    marcador_local: Optional[int] = None
+    marcador_visitante: Optional[int] = None
+    ensayos_local: Optional[int] = None
+    ensayos_visitante: Optional[int] = None
+    jornada: Optional[int] = None
+    lugar: Optional[str] = None
+    observaciones: Optional[str] = None
+    acta_url: Optional[str] = None
+
+class PartidosUpdate(BaseModel):
+    es_local: Optional[bool] = None
+    marcador_local: Optional[int] = None
+    marcador_visitante: Optional[int] = None
     ensayos_local: Optional[int] = None
     ensayos_visitante: Optional[int] = None
     jornada: Optional[int] = None
@@ -183,6 +194,22 @@ class PartidosExternosBase(BaseSchema):
     fecha: Optional[date] = None
     jornada: Optional[int] = None
     competicion: Optional[str] = None
+
+class JugadoresExternosBase(BaseSchema):
+    id: Any
+    nombre_completo: Optional[str] = None
+    licencia: Optional[str] = None
+    ultimo_equipo: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+class JugadoresExternosResponse(JugadoresExternosBase):
+    pass
+
+class JugadoresExternosCreate(BaseModel):
+    id: Optional[str] = None
+    nombre_completo: str
+    licencia: Optional[str] = None
+    ultimo_equipo: Optional[str] = None
 
 class PartidosExternosResponse(PartidosExternosBase):
     estadisticas_partido: Optional[List['EstadisticasPartidoResponse']] = []

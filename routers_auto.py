@@ -121,6 +121,23 @@ def read_eventos_list(
         query = query.filter(models.Eventos.tipo == tipo)
     return query.offset(skip).limit(limit).all()
 
+# --- CRUD for JugadoresExternos ---
+@router.get("/jugadores_externos/", response_model=List[schemas.JugadoresExternosResponse], tags=["JugadoresExternos"])
+@router.get("/jugadores_externos", response_model=List[schemas.JugadoresExternosResponse], tags=["JugadoresExternos"])
+def read_jugadores_externos_list(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db)):
+    return db.query(models.JugadoresExternos).offset(skip).limit(limit).all()
+
+@router.post("/jugadores_externos/", response_model=schemas.JugadoresExternosResponse, tags=["JugadoresExternos"])
+@router.post("/jugadores_externos", response_model=schemas.JugadoresExternosResponse, tags=["JugadoresExternos"])
+def create_jugador_externo(item: schemas.JugadoresExternosCreate, db: Session = Depends(get_db)):
+    import uuid
+    db_item = models.JugadoresExternos(**item.model_dump())
+    if not db_item.id: db_item.id = str(uuid.uuid4())
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
 # --- CRUD for Partidos ---
 @router.get("/partidos", response_model=List[schemas.PartidosResponse], tags=["Partidos"])
 def read_partidos_list(
@@ -140,6 +157,30 @@ def read_partidos_list(
         query = query.filter(models.Partidos.Evento == evento)
     return query.offset(skip).limit(limit).all()
 
+@router.get("/partidos/{item_id}", response_model=schemas.PartidosResponse, tags=["Partidos"])
+def read_partido(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(models.Partidos).options(
+        joinedload(models.Partidos.estadisticas_partido),
+        joinedload(models.Partidos.estadisticas_jugador)
+    ).filter(models.Partidos.id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Partido not found")
+    return item
+
+@router.put("/partidos/{item_id}", response_model=schemas.PartidosResponse, tags=["Partidos"])
+def update_partido(item_id: str, obj_in: schemas.PartidosUpdate, db: Session = Depends(get_db)):
+    db_obj = db.query(models.Partidos).filter(models.Partidos.id == item_id).first()
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Partido not found")
+    
+    update_data = obj_in.model_dump(exclude_unset=True)
+    for field in update_data:
+        setattr(db_obj, field, update_data[field])
+    
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
 # --- CRUD for PartidosExternos ---
 @router.get("/partidos_externos", response_model=List[schemas.PartidosExternosResponse], tags=["PartidosExternos"])
 def read_partidos_externos_list(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -149,7 +190,23 @@ def read_partidos_externos_list(skip: int = 0, limit: int = 100, db: Session = D
     )
     return query.offset(skip).limit(limit).all()
 
+@router.put("/partidos_externos/{item_id}", response_model=schemas.PartidosExternosResponse, tags=["PartidosExternos"])
+def update_partido_externo(item_id: str, obj_in: schemas.PartidosExternosBase, db: Session = Depends(get_db)):
+    db_obj = db.query(models.PartidosExternos).filter(models.PartidosExternos.id == item_id).first()
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="PartidoExterno not found")
+    
+    update_data = obj_in.model_dump(exclude_unset=True)
+    for field in update_data:
+        setattr(db_obj, field, update_data[field])
+    
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
 # --- CRUD for EstadisticasJugador ---
+@router.get("/estadisticas_jugador/", response_model=List[schemas.EstadisticasJugadorResponse], tags=["EstadisticasJugador"])
 @router.get("/estadisticas_jugador", response_model=List[schemas.EstadisticasJugadorResponse], tags=["EstadisticasJugador"])
 def read_estadisticas_jugador_list(
     skip: int = 0, 
@@ -168,7 +225,52 @@ def read_estadisticas_jugador_list(
         query = query.filter(models.EstadisticasJugador.jugador == jugador)
     return query.offset(skip).limit(limit).all()
 
-# --- CRUD for AnalisisPartido ---
+@router.get("/estadisticas_jugador/{item_id}", response_model=schemas.EstadisticasJugadorResponse, tags=["EstadisticasJugador"])
+def read_estadisticas_jugador(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(models.EstadisticasJugador).filter(models.EstadisticasJugador.id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Item not found")
+    return item
+
+@router.post("/estadisticas_jugador", response_model=schemas.EstadisticasJugadorResponse, tags=["EstadisticasJugador"])
+def create_estadisticas_jugador(obj_in: schemas.EstadisticasJugadorBase, db: Session = Depends(get_db)):
+    import uuid
+    obj_data = obj_in.model_dump()
+    if not obj_data.get("id"):
+        obj_data["id"] = str(uuid.uuid4())
+    db_obj = models.EstadisticasJugador(**obj_data)
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+@router.delete("/estadisticas_jugador/{item_id}", tags=["EstadisticasJugador"])
+def delete_estadisticas_jugador_by_id(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(models.EstadisticasJugador).filter(models.EstadisticasJugador.id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Item not found")
+    db.delete(item)
+    db.commit()
+    return {"message": "Deleted successfully"}
+
+@router.delete("/estadisticas_jugador", tags=["EstadisticasJugador"])
+def delete_estadisticas_jugador(
+    partido: Optional[str] = None,
+    partido_externo: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    if not partido and not partido_externo:
+        raise HTTPException(status_code=400, detail="Must provide partido or partido_externo")
+    
+    query = db.query(models.EstadisticasJugador)
+    if partido:
+        query = query.filter(models.EstadisticasJugador.partido == partido)
+    if partido_externo:
+        query = query.filter(models.EstadisticasJugador.partido_externo == partido_externo)
+    
+    deleted_count = query.delete()
+    db.commit()
+    return {"message": f"Deleted {deleted_count} records"}
+
+# --- analísis_partido METHODS ---
 @router.get("/analisis_partido", response_model=List[schemas.AnalisisPartidoResponse], tags=["AnalisisPartido"])
 def read_analisis_partido_list(
     skip: int = 0, 
@@ -225,7 +327,7 @@ def update_analisis_partido(item_id: str, obj_in: schemas.AnalisisPartidoUpdate,
     db.refresh(db_obj)
     return db_obj
 
-# Re-incorporar el resto de métodos CRUD básicos simplificados
+# --- estadisticas_partido METHODS ---
 @router.get("/estadisticas_partido/{item_id}", response_model=schemas.EstadisticasPartidoResponse, tags=["EstadisticasPartido"])
 def read_estadisticas_partido(item_id: str, db: Session = Depends(get_db)):
     item = db.query(models.EstadisticasPartido).filter(models.EstadisticasPartido.id == item_id).first()
@@ -258,6 +360,26 @@ def update_estadisticas_partido(item_id: str, obj_in: schemas.EstadisticasPartid
     db.commit()
     db.refresh(db_obj)
     return db_obj
+
+@router.delete("/estadisticas_partido", tags=["EstadisticasPartido"])
+def delete_estadisticas_partido(
+    partido: Optional[str] = None,
+    partido_externo: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    if not partido and not partido_externo:
+        raise HTTPException(status_code=400, detail="Must provide partido or partido_externo")
+    
+    query = db.query(models.EstadisticasPartido)
+    if partido:
+        query = query.filter(models.EstadisticasPartido.partido_id == partido)
+    if partido_externo:
+        query = query.filter(models.EstadisticasPartido.partido_externo_id == partido_externo)
+    
+    deleted_count = query.delete()
+    db.commit()
+    return {"message": f"Deleted {deleted_count} records"}
+
 @router.delete("/asistencia/{item_id}", tags=["Asistencia"])
 def delete_asistencia(item_id: str, db: Session = Depends(get_db)):
     item = db.query(models.Asistencia).filter(models.Asistencia.id == item_id).first()
@@ -265,6 +387,3 @@ def delete_asistencia(item_id: str, db: Session = Depends(get_db)):
     db.delete(item)
     db.commit()
     return {"message": "Deleted successfully"}
-
-# Se han omitido algunos métodos POST/DELETE repetitivos para brevedad, 
-# pero se mantienen los GET list con filtros que son los críticos para el frontend.
