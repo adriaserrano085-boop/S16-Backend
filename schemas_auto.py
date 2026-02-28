@@ -19,7 +19,7 @@ class AsistenciaCreate(BaseModel): # Create schemas don't need from_attributes
     asistencia: str
 
 class AsistenciaResponse(AsistenciaBase):
-    entrenamientos: Optional['EntrenamientosResponse'] = None
+    entrenamientos: Optional['EntrenamientosConEventoResponse'] = None
     jugadores: Optional['JugadoresPropiosResponse'] = None
 
 # --- ESTADISTICAS PARTIDO ---
@@ -50,8 +50,14 @@ class EntrenamientosBase(BaseSchema):
     calentamiento: Optional[str] = None
 
 class EntrenamientosResponse(EntrenamientosBase):
+    pass
+
+class EntrenamientosDetalleResponse(EntrenamientosBase):
     evento_ref: Optional['EventosResponse'] = None
     asistencias: Optional[List['AsistenciaResponse']] = []
+
+class EntrenamientosConEventoResponse(EntrenamientosBase):
+    evento_ref: Optional['EventosResponse'] = None
 
 # --- RIVALES ---
 class RivalesBase(BaseSchema):
@@ -194,4 +200,5 @@ EventosResponse.model_rebuild()
 AsistenciaResponse.model_rebuild()
 PartidosResponse.model_rebuild()
 PartidosExternosResponse.model_rebuild()
-EntrenamientosResponse.model_rebuild()
+EntrenamientosDetalleResponse.model_rebuild()
+EntrenamientosConEventoResponse.model_rebuild()
