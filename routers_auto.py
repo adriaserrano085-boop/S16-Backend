@@ -232,7 +232,7 @@ def read_estadisticas_jugador(item_id: str, db: Session = Depends(get_db)):
     return item
 
 @router.post("/estadisticas_jugador", response_model=schemas.EstadisticasJugadorResponse, tags=["EstadisticasJugador"])
-def create_estadisticas_jugador(obj_in: schemas.EstadisticasJugadorBase, db: Session = Depends(get_db)):
+def create_estadisticas_jugador(obj_in: schemas.EstadisticasJugadorCreate, db: Session = Depends(get_db)):
     import uuid
     obj_data = obj_in.model_dump()
     if not obj_data.get("id"):

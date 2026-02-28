@@ -234,6 +234,27 @@ class EstadisticasJugadorBase(BaseSchema):
     minutos_jugados: Optional[int] = None
     es_titular: Optional[bool] = None
     es_capitan: Optional[bool] = None
+    fue_convocado: Optional[bool] = True
+
+class EstadisticasJugadorCreate(BaseModel):
+    id: Optional[str] = None
+    partido: Optional[str] = None
+    jugador: Optional[str] = None
+    partido_externo: Optional[str] = None
+    jugador_externo: Optional[str] = None
+    nombre: Optional[str] = None
+    equipo: Optional[str] = None
+    dorsal: Optional[int] = None
+    ensayos: Optional[int] = 0
+    transformaciones: Optional[int] = 0
+    penales: Optional[int] = 0
+    drops: Optional[int] = 0
+    tarjetas_amarillas: Optional[int] = 0
+    tarjetas_rojas: Optional[int] = 0
+    minutos_jugados: Optional[int] = None
+    es_titular: Optional[bool] = None
+    es_capitan: Optional[bool] = None
+    fue_convocado: Optional[bool] = True
 
 class EstadisticasJugadorResponse(EstadisticasJugadorBase):
     pass
