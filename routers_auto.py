@@ -11,7 +11,7 @@ router = APIRouter()
 @router.get("/asistencia", response_model=List[schemas.AsistenciaResponse], tags=["Asistencia"])
 def read_asistencia_list(
     skip: int = 0, 
-    limit: int = 100, 
+    limit: int = 10000, 
     entrenamiento: Optional[str] = None,
     jugador: Optional[str] = None,
     db: Session = Depends(get_db)
@@ -56,10 +56,10 @@ def read_estadisticas_partido_list(
     return query.offset(skip).limit(limit).all()
 
 # --- CRUD for Entrenamientos ---
-@router.get("/entrenamientos", response_model=List[schemas.EntrenamientosResponse], tags=["Entrenamientos"])
+@router.get("/entrenamientos", response_model=List[schemas.EntrenamientosDetalleResponse], tags=["Entrenamientos"])
 def read_entrenamientos_list(
     skip: int = 0, 
-    limit: int = 100, 
+    limit: int = 10000, 
     evento: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
@@ -71,7 +71,7 @@ def read_entrenamientos_list(
         query = query.filter(models.Entrenamientos.evento == evento)
     return query.offset(skip).limit(limit).all()
 
-@router.get("/entrenamientos/{item_id}", response_model=schemas.EntrenamientosResponse, tags=["Entrenamientos"])
+@router.get("/entrenamientos/{item_id}", response_model=schemas.EntrenamientosDetalleResponse, tags=["Entrenamientos"])
 def read_entrenamientos(item_id: str, db: Session = Depends(get_db)):
     item = db.query(models.Entrenamientos).options(
         joinedload(models.Entrenamientos.evento_ref),
@@ -108,7 +108,7 @@ def read_jugadores_propios_list(
 @router.get("/eventos", response_model=List[schemas.EventosResponse], tags=["Eventos"])
 def read_eventos_list(
     skip: int = 0, 
-    limit: int = 100, 
+    limit: int = 10000, 
     tipo: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
@@ -125,7 +125,7 @@ def read_eventos_list(
 @router.get("/partidos", response_model=List[schemas.PartidosResponse], tags=["Partidos"])
 def read_partidos_list(
     skip: int = 0, 
-    limit: int = 100, 
+    limit: int = 10000, 
     rival: Optional[str] = None,
     evento: Optional[str] = None,
     db: Session = Depends(get_db)
