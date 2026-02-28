@@ -152,6 +152,27 @@ class EventosResponse(EventosBase):
     entrenamiento: Optional['EntrenamientosResponse'] = None
     analisis: Optional['AnalisisPartidoResponse'] = None
 
+class EventoCreateUpdate(BaseModel):
+    id: Optional[str] = None # UUID if updating
+    tipo: str
+    fecha: date
+    hora: time
+    estado: Optional[str] = "Programado"
+    observaciones: Optional[str] = None
+    
+    # Training details (optional, used if tipo == 'Entrenamiento')
+    calentamiento: Optional[str] = None
+    trabajo_separado: Optional[str] = None
+    trabajo_conjunto: Optional[str] = None
+    
+    # Match details (optional, used if tipo == 'Partido')
+    rival_id: Optional[str] = None
+    es_local: Optional[bool] = True
+    lugar: Optional[str] = None
+    marcador_local: Optional[int] = None
+    marcador_visitante: Optional[int] = None
+    jornada: Optional[int] = None
+
 # --- PARTIDOS ---
 class PartidosBase(BaseSchema):
     id: Any
@@ -191,6 +212,18 @@ class PartidosExternosBase(BaseSchema):
     marcador_visitante: Optional[int] = None
     ensayos_local: Optional[int] = None
     ensayos_visitante: Optional[int] = None
+    fecha: Optional[date] = None
+    jornada: Optional[int] = None
+    competicion: Optional[str] = None
+
+class PartidosExternosCreate(BaseModel):
+    id: Optional[str] = None
+    equipo_local: str
+    equipo_visitante: str
+    marcador_local: Optional[int] = 0
+    marcador_visitante: Optional[int] = 0
+    ensayos_local: Optional[int] = 0
+    ensayos_visitante: Optional[int] = 0
     fecha: Optional[date] = None
     jornada: Optional[int] = None
     competicion: Optional[str] = None
@@ -323,6 +356,26 @@ class RoleAssignmentRequest(BaseModel):
 class FamilyLinkRequest(BaseModel):
     family_user_id: str
     player_user_id: str
+
+class EventoCreateUpdate(BaseModel):
+    id: Optional[str] = None  # UUID for events
+    tipo: str
+    fecha: str
+    hora: str
+    lugar: Optional[str] = None
+    estado: Optional[str] = "Programado"
+    observaciones: Optional[str] = None
+    
+    # Match specific
+    rival_id: Optional[str] = None
+    es_local: Optional[bool] = True
+    marcador_local: Optional[int] = None
+    marcador_visitante: Optional[int] = None
+    
+    # Training specific
+    calentamiento: Optional[str] = None
+    trabajo_separado: Optional[str] = None
+    trabajo_conjunto: Optional[str] = None
 
 EventosResponse.model_rebuild()
 AsistenciaResponse.model_rebuild()

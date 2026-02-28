@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
+from datetime import date
 import models_auto as models
 import schemas_auto as schemas
 from database import get_db
@@ -119,6 +120,7 @@ def read_eventos_list(
     skip: int = 0, 
     limit: int = 10000, 
     tipo: Optional[str] = None,
+    fecha: Optional[date] = None,
     db: Session = Depends(get_db)
 ):
     query = db.query(models.Eventos).options(
@@ -128,6 +130,8 @@ def read_eventos_list(
     )
     if tipo:
         query = query.filter(models.Eventos.tipo == tipo)
+    if fecha:
+        query = query.filter(models.Eventos.fecha == fecha)
     return query.offset(skip).limit(limit).all()
 
 # --- CRUD for JugadoresExternos ---
@@ -143,7 +147,7 @@ def create_jugador_externo(item: schemas.JugadoresExternosCreate, db: Session = 
     if item.licencia:
         existing = db.query(models.JugadoresExternos).filter(models.JugadoresExternos.licencia == item.licencia).first()
         if existing:
-            # Update existing if needed (optional, user requested "compruebe si no esta duplicado")
+            # Update existing
             existing.nombre_completo = item.nombre_completo
             existing.ultimo_equipo = item.ultimo_equipo
             db.commit()
@@ -201,12 +205,50 @@ def update_partido(item_id: str, obj_in: schemas.PartidosUpdate, db: Session = D
 
 # --- CRUD for PartidosExternos ---
 @router.get("/partidos_externos", response_model=List[schemas.PartidosExternosResponse], tags=["PartidosExternos"])
-def read_partidos_externos_list(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def read_partidos_externos_list(
+    skip: int = 0, 
+    limit: int = 100, 
+    fecha: Optional[date] = None,
+    equipo_local: Optional[str] = None,
+    equipo_visitante: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
     query = db.query(models.PartidosExternos).options(
         joinedload(models.PartidosExternos.estadisticas_partido),
         joinedload(models.PartidosExternos.estadisticas_jugador)
     )
+    if fecha:
+        query = query.filter(models.PartidosExternos.fecha == fecha)
+    if equipo_local:
+        query = query.filter(models.PartidosExternos.equipo_local == equipo_local)
+    if equipo_visitante:
+        query = query.filter(models.PartidosExternos.equipo_visitante == equipo_visitante)
     return query.offset(skip).limit(limit).all()
+
+@router.post("/partidos_externos", response_model=schemas.PartidosExternosResponse, tags=["PartidosExternos"])
+def create_partido_externo(obj_in: schemas.PartidosExternosCreate, db: Session = Depends(get_db)):
+    obj_data = obj_in.model_dump()
+    
+    # Upsert logic: check by date and teams
+    existing = db.query(models.PartidosExternos).filter(
+        models.PartidosExternos.fecha == obj_data["fecha"],
+        models.PartidosExternos.equipo_local == obj_data["equipo_local"],
+        models.PartidosExternos.equipo_visitante == obj_data["equipo_visitante"]
+    ).first()
+    
+    if existing:
+        for field, value in obj_data.items():
+            if field != "id":
+                setattr(existing, field, value)
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    db_obj = models.PartidosExternos(**obj_data)
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 @router.put("/partidos_externos/{item_id}", response_model=schemas.PartidosExternosResponse, tags=["PartidosExternos"])
 def update_partido_externo(item_id: str, obj_in: schemas.PartidosExternosBase, db: Session = Depends(get_db)):
@@ -222,6 +264,14 @@ def update_partido_externo(item_id: str, obj_in: schemas.PartidosExternosBase, d
     db.commit()
     db.refresh(db_obj)
     return db_obj
+
+@router.delete("/partidos_externos/{item_id}", tags=["PartidosExternos"])
+def delete_partido_externo(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(models.PartidosExternos).filter(models.PartidosExternos.id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Item not found")
+    db.delete(item)
+    db.commit()
+    return {"message": "Deleted successfully"}
 
 # --- CRUD for EstadisticasJugador ---
 @router.get("/estadisticas_jugador/", response_model=List[schemas.EstadisticasJugadorResponse], tags=["EstadisticasJugador"])
@@ -254,7 +304,6 @@ def create_estadisticas_jugador(obj_in: schemas.EstadisticasJugadorCreate, db: S
     obj_data = obj_in.model_dump()
     
     # Duplicate check logic
-    # We check by (partido or partido_externo) AND (jugador or jugador_externo or licencia or nombre)
     query = db.query(models.EstadisticasJugador)
     if obj_data.get("partido"):
         query = query.filter(models.EstadisticasJugador.partido == obj_data["partido"])
@@ -272,7 +321,6 @@ def create_estadisticas_jugador(obj_in: schemas.EstadisticasJugadorCreate, db: S
     
     existing = query.first()
     if existing:
-        # Update existing
         for field, value in obj_data.items():
             if field != "id":
                 setattr(existing, field, value)
@@ -337,7 +385,6 @@ def create_analisis_partido(obj_in: schemas.AnalisisPartidoCreate, db: Session =
     import json
     obj_data = obj_in.model_dump()
     
-    # Duplicate check
     query = db.query(models.AnalisisPartido)
     if obj_data.get("partido_id"):
         query = query.filter(models.AnalisisPartido.partido_id == obj_data["partido_id"])
@@ -345,8 +392,6 @@ def create_analisis_partido(obj_in: schemas.AnalisisPartidoCreate, db: Session =
         query = query.filter(models.AnalisisPartido.partido_externo_id == obj_data["partido_externo_id"])
     
     existing = query.first()
-    
-    # Handle raw_json if it's a dict/list
     if obj_data.get("raw_json") is not None and not isinstance(obj_data["raw_json"], str):
         obj_data["raw_json"] = json.dumps(obj_data["raw_json"])
         
@@ -394,7 +439,6 @@ def read_estadisticas_partido(item_id: str, db: Session = Depends(get_db)):
 def create_estadisticas_partido(obj_in: schemas.EstadisticasPartidoCreate, db: Session = Depends(get_db)):
     obj_data = obj_in.model_dump()
     
-    # Duplicate check
     query = db.query(models.EstadisticasPartido)
     if obj_data.get("partido_id"):
         query = query.filter(models.EstadisticasPartido.partido_id == obj_data["partido_id"])
@@ -415,6 +459,44 @@ def create_estadisticas_partido(obj_in: schemas.EstadisticasPartidoCreate, db: S
     db.commit()
     db.refresh(db_obj)
     return db_obj
+
+@router.delete("/estadisticas_partido/{item_id}", tags=["EstadisticasPartido"])
+def delete_estadisticas_partido_by_id(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(models.EstadisticasPartido).filter(models.EstadisticasPartido.id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Item not found")
+    db.delete(item)
+    db.commit()
+    return {"message": "Deleted successfully"}
+
+@router.post("/borrar_datos_partido", tags=["CustomOps"])
+def borrar_datos_partido(payload: dict, db: Session = Depends(get_db)):
+    match_id = payload.get("match_id")
+    match_type = payload.get("type")
+    
+    if not match_id or not match_type:
+        raise HTTPException(status_code=400, detail="Missing match_id or type")
+
+    if match_type == 'standard':
+        db.query(models.EstadisticasJugador).filter(models.EstadisticasJugador.partido == match_id).delete()
+        db.query(models.EstadisticasPartido).filter(models.EstadisticasPartido.partido_id == match_id).delete()
+        db.query(models.AnalisisPartido).filter(models.AnalisisPartido.partido_id == match_id).delete()
+        
+        partido = db.query(models.Partidos).filter(models.Partidos.id == match_id).first()
+        if partido:
+            partido.marcador_local = None
+            partido.marcador_visitante = None
+            partido.ensayos_local = 0
+            partido.ensayos_visitante = 0
+            partido.acta_url = None
+            
+    elif match_type == 'external':
+        db.query(models.EstadisticasJugador).filter(models.EstadisticasJugador.partido_externo == match_id).delete()
+        db.query(models.EstadisticasPartido).filter(models.EstadisticasPartido.partido_externo_id == match_id).delete()
+        db.query(models.AnalisisPartido).filter(models.AnalisisPartido.partido_externo_id == match_id).delete()
+        db.query(models.PartidosExternos).filter(models.PartidosExternos.id == match_id).delete()
+    
+    db.commit()
+    return {"message": "Match data deleted/reset successfully"}
 
 @router.put("/estadisticas_partido/{item_id}", response_model=schemas.EstadisticasPartidoResponse, tags=["EstadisticasPartido"])
 def update_estadisticas_partido(item_id: str, obj_in: schemas.EstadisticasPartidoUpdate, db: Session = Depends(get_db)):
@@ -457,3 +539,82 @@ def delete_asistencia(item_id: str, db: Session = Depends(get_db)):
     db.delete(item)
     db.commit()
     return {"message": "Deleted successfully"}
+
+@router.post("/crear_o_actualizar_evento", tags=["CustomOps"])
+def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = Depends(get_db)):
+    import uuid
+    
+    # 1. Handle Evento (Base)
+    evento_id = obj_in.id
+    db_evento = None
+    
+    if evento_id:
+        db_evento = db.query(models.Eventos).filter(models.Eventos.id == evento_id).first()
+    
+    if db_evento:
+        # Update existing
+        db_evento.tipo = obj_in.tipo
+        db_evento.fecha = obj_in.fecha
+        db_evento.hora = obj_in.hora
+        db_evento.lugar = obj_in.lugar
+        db_evento.estado = obj_in.estado
+        db_evento.observaciones = obj_in.observaciones
+    else:
+        # Create new
+        new_id = str(uuid.uuid4())
+        db_evento = models.Eventos(
+            id=new_id,
+            tipo=obj_in.tipo,
+            fecha=obj_in.fecha,
+            hora=obj_in.hora,
+            lugar=obj_in.lugar,
+            estado=obj_in.estado,
+            observaciones=obj_in.observaciones
+        )
+        db.add(db_evento)
+    
+    db.flush() # Get the ID if new
+    actual_evento_id = db_evento.id
+
+    # 2. Handle Specific Data (Partido or Entrenamiento)
+    if obj_in.tipo == 'Partido':
+        # Check if Partidos entry exists for this event
+        db_partido = db.query(models.Partidos).filter(models.Partidos.evento_id == actual_evento_id).first()
+        
+        if db_partido:
+            db_partido.rival_id = obj_in.rival_id
+            db_partido.es_local = obj_in.es_local
+            db_partido.marcador_local = obj_in.marcador_local
+            db_partido.marcador_visitante = obj_in.marcador_visitante
+        else:
+            new_partido = models.Partidos(
+                id=str(uuid.uuid4()),
+                evento_id=actual_evento_id,
+                rival_id=obj_in.rival_id,
+                es_local=obj_in.es_local,
+                marcador_local=obj_in.marcador_local,
+                marcador_visitante=obj_in.marcador_visitante
+            )
+            db.add(new_partido)
+            
+    elif obj_in.tipo == 'Entrenamiento':
+        # Check if Entrenamientos entry exists for this event
+        db_entrenamiento = db.query(models.Entrenamientos).filter(models.Entrenamientos.evento_id == actual_evento_id).first()
+        
+        if db_entrenamiento:
+            db_entrenamiento.calentamiento = obj_in.calentamiento
+            db_entrenamiento.trabajo_separado = obj_in.trabajo_separado
+            db_entrenamiento.trabajo_conjunto = obj_in.trabajo_conjunto
+        else:
+            new_entrenamiento = models.Entrenamientos(
+                id=str(uuid.uuid4()),
+                evento_id=actual_evento_id,
+                calentamiento=obj_in.calentamiento,
+                trabajo_separado=obj_in.trabajo_separado,
+                trabajo_conjunto=obj_in.trabajo_conjunto
+            )
+            db.add(new_entrenamiento)
+
+    db.commit()
+    db.refresh(db_evento)
+    return db_evento
