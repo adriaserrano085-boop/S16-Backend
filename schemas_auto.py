@@ -50,7 +50,8 @@ class EntrenamientosBase(BaseSchema):
     calentamiento: Optional[str] = None
 
 class EntrenamientosResponse(EntrenamientosBase):
-    pass
+    evento_ref: Optional['EventosResponse'] = None
+    asistencias: Optional[List['AsistenciaResponse']] = []
 
 # --- RIVALES ---
 class RivalesBase(BaseSchema):
@@ -193,4 +194,4 @@ EventosResponse.model_rebuild()
 AsistenciaResponse.model_rebuild()
 PartidosResponse.model_rebuild()
 PartidosExternosResponse.model_rebuild()
-
+EntrenamientosResponse.model_rebuild()

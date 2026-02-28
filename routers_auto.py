@@ -63,14 +63,20 @@ def read_entrenamientos_list(
     evento: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    query = db.query(models.Entrenamientos)
+    query = db.query(models.Entrenamientos).options(
+        joinedload(models.Entrenamientos.evento_ref),
+        joinedload(models.Entrenamientos.asistencias)
+    )
     if evento:
         query = query.filter(models.Entrenamientos.evento == evento)
     return query.offset(skip).limit(limit).all()
 
 @router.get("/entrenamientos/{item_id}", response_model=schemas.EntrenamientosResponse, tags=["Entrenamientos"])
 def read_entrenamientos(item_id: str, db: Session = Depends(get_db)):
-    item = db.query(models.Entrenamientos).filter(models.Entrenamientos.id_entrenamiento == item_id).first()
+    item = db.query(models.Entrenamientos).options(
+        joinedload(models.Entrenamientos.evento_ref),
+        joinedload(models.Entrenamientos.asistencias)
+    ).filter(models.Entrenamientos.id_entrenamiento == item_id).first()
     if not item: raise HTTPException(status_code=404, detail="Item not found")
     return item
 

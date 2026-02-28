@@ -42,6 +42,8 @@ class Entrenamientos(Base):
 
     # Relación inversa a Eventos
     evento_ref = relationship("Eventos", back_populates="entrenamiento")
+    # Relación hijas (Asistencias)
+    asistencias = relationship("Asistencia", back_populates="entrenamientos")
 
 class Rivales(Base):
     __tablename__ = "rivales"
