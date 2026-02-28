@@ -18,7 +18,13 @@ import uuid
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Static Files for Uploads - Defined early for route reference
+UPLOAD_DIR = "uploads"
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
 app = FastAPI(
+
     title="S16 Rugby App Backup Migration API",
     redirect_slashes=True
 )
@@ -179,14 +185,8 @@ app.add_middleware(
 # Middleware for proxy headers (Railway/Vercel)
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
-# Static Files for Uploads
-UPLOAD_DIR = "uploads"
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
-
+# Static Files mount
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-
-# Route moved up for priority
 
 
 @app.on_event("startup")
