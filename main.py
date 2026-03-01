@@ -364,8 +364,8 @@ def get_current_user_profile(
         "role": current_user.role,
         "is_active": current_user.is_active,
         "is_pending_validation": current_user.is_pending_validation,
-        "debug_role": str(current_user.role),
-        "debug_is_admin": str(current_user.role) == "ADMIN"
+        "debug_role": str(current_user.role.value) if hasattr(current_user.role, "value") else str(current_user.role),
+        "debug_is_admin": (str(current_user.role.value) if hasattr(current_user.role, "value") else str(current_user.role)) == "ADMIN"
     }
     
     # Add domain-specific IDs with robust error handling
@@ -442,9 +442,14 @@ def get_all_users(
     """
     Lista de todos los usuarios (solo para ADMIN).
     """
-    if str(current_user.role) != "ADMIN":
-        logger.warning(f"PERM_ERROR: User {current_user.email} (role: {current_user.role}) denied access to /users/all")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Only ADMIN can access this. Your role is {current_user.role}")
+    if hasattr(current_user.role, "value"):
+        role_str = str(current_user.role.value)
+    else:
+        role_str = str(current_user.role)
+
+    if role_str != "ADMIN":
+        logger.warning(f"PERM_ERROR: User {current_user.email} (role: {role_str}) denied access to /users/all")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Only ADMIN can access this. Your role is {role_str}")
         
     users = db.query(models.User).all()
     return users
