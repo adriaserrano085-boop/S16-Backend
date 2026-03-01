@@ -556,7 +556,6 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
         db_evento.tipo = obj_in.tipo
         db_evento.fecha = obj_in.fecha
         db_evento.hora = obj_in.hora
-        db_evento.lugar = obj_in.lugar
         db_evento.estado = obj_in.estado
         db_evento.observaciones = obj_in.observaciones
     else:
@@ -567,7 +566,6 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
             tipo=obj_in.tipo,
             fecha=obj_in.fecha,
             hora=obj_in.hora,
-            lugar=obj_in.lugar,
             estado=obj_in.estado,
             observaciones=obj_in.observaciones
         )
@@ -584,6 +582,7 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
         if db_partido:
             db_partido.rival_id = obj_in.rival_id
             db_partido.es_local = obj_in.es_local
+            db_partido.lugar = obj_in.lugar
             db_partido.marcador_local = obj_in.marcador_local
             db_partido.marcador_visitante = obj_in.marcador_visitante
         else:
@@ -592,6 +591,7 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
                 evento_id=actual_evento_id,
                 rival_id=obj_in.rival_id,
                 es_local=obj_in.es_local,
+                lugar=obj_in.lugar,
                 marcador_local=obj_in.marcador_local,
                 marcador_visitante=obj_in.marcador_visitante
             )
