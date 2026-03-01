@@ -173,6 +173,192 @@ class EventoCreateUpdate(BaseModel):
     marcador_visitante: Optional[int] = None
     jornada: Optional[int] = None
 
+# --- PARTIDOS ---
+class PartidosBase(BaseSchema):
+    id: Any
+    Rival: Optional[Any] = None
+    Evento: Optional[Any] = None
+    es_local: Optional[bool] = None
+    marcador_local: Optional[int] = None
+    marcador_visitante: Optional[int] = None
+    ensayos_local: Optional[int] = None
+    ensayos_visitante: Optional[int] = None
+    jornada: Optional[int] = None
+    lugar: Optional[str] = None
+    observaciones: Optional[str] = None
+    acta_url: Optional[str] = None
+
+class PartidosUpdate(BaseModel):
+    es_local: Optional[bool] = None
+    marcador_local: Optional[int] = None
+    marcador_visitante: Optional[int] = None
+    ensayos_local: Optional[int] = None
+    ensayos_visitante: Optional[int] = None
+    jornada: Optional[int] = None
+    lugar: Optional[str] = None
+    observaciones: Optional[str] = None
+    acta_url: Optional[str] = None
+
+class PartidosResponse(PartidosBase):
+    estadisticas_partido: Optional[List['EstadisticasPartidoResponse']] = []
+    estadisticas_jugador: Optional[List['EstadisticasJugadorResponse']] = []
+
+# --- PARTIDOS EXTERNOS ---
+class PartidosExternosBase(BaseSchema):
+    id: Any
+    equipo_local: Optional[str] = None
+    equipo_visitante: Optional[str] = None
+    marcador_local: Optional[int] = None
+    marcador_visitante: Optional[int] = None
+    ensayos_local: Optional[int] = None
+    ensayos_visitante: Optional[int] = None
+    fecha: Optional[date] = None
+    jornada: Optional[int] = None
+    competicion: Optional[str] = None
+
+class PartidosExternosCreate(BaseModel):
+    id: Optional[str] = None
+    equipo_local: str
+    equipo_visitante: str
+    marcador_local: Optional[int] = 0
+    marcador_visitante: Optional[int] = 0
+    ensayos_local: Optional[int] = 0
+    ensayos_visitante: Optional[int] = 0
+    fecha: Optional[date] = None
+    jornada: Optional[int] = None
+    competicion: Optional[str] = None
+
+class PartidosExternosResponse(PartidosExternosBase):
+    estadisticas_partido: Optional[List['EstadisticasPartidoResponse']] = []
+    estadisticas_jugador: Optional[List['EstadisticasJugadorResponse']] = []
+
+# --- JUGADORES EXTERNOS ---
+class JugadoresExternosBase(BaseSchema):
+    id: Any
+    nombre_completo: Optional[str] = None
+    licencia: Optional[str] = None
+    ultimo_equipo: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+class JugadoresExternosResponse(JugadoresExternosBase):
+    pass
+
+class JugadoresExternosCreate(BaseModel):
+    id: Optional[str] = None
+    nombre_completo: str
+    licencia: Optional[str] = None
+    ultimo_equipo: Optional[str] = None
+
+# --- ESTADISTICAS JUGADOR ---
+class EstadisticasJugadorBase(BaseSchema):
+    id: Any
+    partido: Optional[Any] = None
+    jugador: Optional[Any] = None
+    partido_externo: Optional[Any] = None
+    jugador_externo: Optional[Any] = None
+    nombre: Optional[str] = None
+    equipo: Optional[str] = None
+    dorsal: Optional[int] = None
+    ensayos: Optional[int] = 0
+    transformaciones: Optional[int] = 0
+    penales: Optional[int] = 0
+    drops: Optional[int] = 0
+    tarjetas_amarillas: Optional[int] = 0
+    tarjetas_rojas: Optional[int] = 0
+    minutos_jugados: Optional[int] = None
+    es_titular: Optional[bool] = None
+    es_capitan: Optional[bool] = None
+    fue_convocado: Optional[bool] = True
+    licencia: Optional[str] = None
+
+class EstadisticasJugadorCreate(BaseModel):
+    id: Optional[str] = None
+    partido: Optional[str] = None
+    jugador: Optional[str] = None
+    partido_externo: Optional[str] = None
+    jugador_externo: Optional[str] = None
+    nombre: Optional[str] = None
+    equipo: Optional[str] = None
+    dorsal: Optional[int] = None
+    ensayos: Optional[int] = 0
+    transformaciones: Optional[int] = 0
+    penales: Optional[int] = 0
+    drops: Optional[int] = 0
+    tarjetas_amarillas: Optional[int] = 0
+    tarjetas_rojas: Optional[int] = 0
+    minutos_jugados: Optional[int] = None
+    es_titular: Optional[bool] = None
+    es_capitan: Optional[bool] = None
+    fue_convocado: Optional[bool] = True
+    licencia: Optional[str] = None
+
+class EstadisticasJugadorResponse(EstadisticasJugadorBase):
+    pass
+
+# --- ANALISIS PARTIDO ---
+class AnalisisPartidoBase(BaseSchema):
+    id: Any
+    partido: Optional[Any] = Field(None, validation_alias=AliasChoices("partido", "partido_id"), serialization_alias="partido")
+    evento: Optional[Any] = Field(None, validation_alias=AliasChoices("evento", "evento_id"), serialization_alias="evento")
+    partido_externo: Optional[Any] = Field(None, validation_alias=AliasChoices("partido_externo", "partido_externo_id"), serialization_alias="partido_externo")
+    video_url: Optional[str] = None
+    video_offset_sec: Optional[int] = None
+    raw_json: Optional[Any] = None
+
+class AnalisisPartidoResponse(AnalisisPartidoBase):
+    pass
+
+class AnalisisPartidoCreate(BaseModel):
+    id: Optional[str] = None
+    partido_id: Optional[str] = None
+    evento_id: Optional[str] = None
+    partido_externo_id: Optional[str] = None
+    video_url: Optional[str] = None
+    video_offset_sec: Optional[int] = None
+    raw_json: Optional[Any] = None
+
+class AnalisisPartidoUpdate(BaseModel):
+    video_url: Optional[str] = None
+    video_offset_sec: Optional[int] = None
+    raw_json: Optional[Any] = None
+
+# --- OTROS ---
+class StaffResponse(BaseSchema):
+    id: Any
+    nombre: Optional[str] = None
+    apellidos: Optional[str] = None
+    email: Optional[str] = None
+    activo: Optional[bool] = None
+
+class JugadoresPropiosResponse(BaseSchema):
+    id: Any
+    nombre: Optional[str] = None
+    apellidos: Optional[str] = None
+    email: Optional[str] = None
+    posiciones: Optional[str] = None
+    talla: Optional[str] = None
+    activo: Optional[bool] = None
+    foto: Optional[str] = None
+
+class FamiliasResponse(BaseSchema):
+    id_usuario: Any
+    nombre_completo: Optional[str] = None
+    parentesco: Optional[str] = None
+
+class ConvocatoriaResponse(BaseSchema):
+    id: Any
+    partido: Optional[Any] = None
+    jugador: Optional[Any] = None
+    numero: Optional[float] = None
+
+class RoleAssignmentRequest(BaseModel):
+    target_user_id: str
+    new_role: str
+
+class FamilyLinkRequest(BaseModel):
+    family_user_id: str
+    player_user_id: str
+
 EventosResponse.model_rebuild()
 AsistenciaResponse.model_rebuild()
 PartidosResponse.model_rebuild()
