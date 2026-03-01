@@ -551,6 +551,13 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
     if evento_id:
         db_evento = db.query(models.Eventos).filter(models.Eventos.id == evento_id).first()
     
+    # Logic: if no ID, check if an event exists for the same date and time
+    if not db_evento:
+        db_evento = db.query(models.Eventos).filter(
+            models.Eventos.fecha == obj_in.fecha,
+            models.Eventos.hora == obj_in.hora
+        ).first()
+
     if db_evento:
         # Update existing
         db_evento.tipo = obj_in.tipo
@@ -577,7 +584,7 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
     # 2. Handle Specific Data (Partido or Entrenamiento)
     if obj_in.tipo == 'Partido':
         # Check if Partidos entry exists for this event
-        db_partido = db.query(models.Partidos).filter(models.Partidos.evento_id == actual_evento_id).first()
+        db_partido = db.query(models.Partidos).filter(models.Partidos.Evento == actual_evento_id).first()
         
         if db_partido:
             db_partido.rival_id = obj_in.rival_id
@@ -588,8 +595,8 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
         else:
             new_partido = models.Partidos(
                 id=str(uuid.uuid4()),
-                evento_id=actual_evento_id,
-                rival_id=obj_in.rival_id,
+                Evento=actual_evento_id,
+                Rival=obj_in.rival_id,
                 es_local=obj_in.es_local,
                 lugar=obj_in.lugar,
                 marcador_local=obj_in.marcador_local,
@@ -599,7 +606,7 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
             
     elif obj_in.tipo == 'Entrenamiento':
         # Check if Entrenamientos entry exists for this event
-        db_entrenamiento = db.query(models.Entrenamientos).filter(models.Entrenamientos.evento_id == actual_evento_id).first()
+        db_entrenamiento = db.query(models.Entrenamientos).filter(models.Entrenamientos.evento == actual_evento_id).first()
         
         if db_entrenamiento:
             db_entrenamiento.calentamiento = obj_in.calentamiento
@@ -608,7 +615,7 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
         else:
             new_entrenamiento = models.Entrenamientos(
                 id=str(uuid.uuid4()),
-                evento_id=actual_evento_id,
+                evento=actual_evento_id,
                 calentamiento=obj_in.calentamiento,
                 trabajo_separado=obj_in.trabajo_separado,
                 trabajo_conjunto=obj_in.trabajo_conjunto
