@@ -35,7 +35,7 @@ def read_asistencia(item_id: str, db: Session = Depends(get_db)):
 
 @router.post("/asistencia", response_model=schemas.AsistenciaResponse, tags=["Asistencia"])
 def create_asistencia(item: schemas.AsistenciaCreate, db: Session = Depends(get_db)):
-    # Duplicate check
+    # Duplicate check using the resolved IDs from the schema
     existing = db.query(models.Asistencia).filter(
         models.Asistencia.entrenamiento_id == item.entrenamiento_id,
         models.Asistencia.jugador_id == item.jugador_id
@@ -51,6 +51,40 @@ def create_asistencia(item: schemas.AsistenciaCreate, db: Session = Depends(get_
     db.commit()
     db.refresh(db_item)
     return db_item
+
+@router.put("/asistencia/{item_id}", response_model=schemas.AsistenciaResponse, tags=["Asistencia"])
+def update_asistencia(item_id: str, item: schemas.AsistenciaUpdate, db: Session = Depends(get_db)):
+    db_item = db.query(models.Asistencia).filter(models.Asistencia.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Asistencia not found")
+    
+    db_item.asistencia = item.asistencia
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+@router.post("/asistencia/bulk", tags=["Asistencia"])
+def create_asistencia_bulk(items: List[schemas.AsistenciaCreate], db: Session = Depends(get_db)):
+    results = []
+    for item in items:
+        # Reuse the logic from create_asistencia for consistency
+        existing = db.query(models.Asistencia).filter(
+            models.Asistencia.entrenamiento_id == item.entrenamiento_id,
+            models.Asistencia.jugador_id == item.jugador_id
+        ).first()
+        
+        if existing:
+            existing.asistencia = item.asistencia
+            results.append(existing)
+        else:
+            db_item = models.Asistencia(**item.model_dump())
+            db.add(db_item)
+            results.append(db_item)
+            
+    db.commit()
+    # Refreshing all might be expensive, but needed for response if we returned full objects
+    # For now, just return a success message or count to keep it simple and fast
+    return {"message": f"Successfully processed {len(items)} attendance records", "count": len(items)}
 
 # --- CRUD for EstadisticasPartido ---
 @router.get("/estadisticas_partido", response_model=List[schemas.EstadisticasPartidoResponse], tags=["EstadisticasPartido"])

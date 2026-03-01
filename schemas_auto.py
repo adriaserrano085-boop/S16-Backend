@@ -13,9 +13,12 @@ class AsistenciaBase(BaseSchema):
     jugador: Optional[Any] = Field(None, validation_alias=AliasChoices("jugador", "jugador_id"), serialization_alias="jugador")
     asistencia: Optional[str] = None
 
-class AsistenciaCreate(BaseModel): # Create schemas don't need from_attributes
-    entrenamiento_id: Any
-    jugador_id: Any
+class AsistenciaCreate(BaseModel):
+    entrenamiento_id: Any = Field(..., validation_alias=AliasChoices("entrenamiento_id", "entrenamiento"))
+    jugador_id: Any = Field(..., validation_alias=AliasChoices("jugador_id", "jugador"))
+    asistencia: str
+
+class AsistenciaUpdate(BaseModel):
     asistencia: str
 
 class AsistenciaResponse(AsistenciaBase):
