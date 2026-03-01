@@ -1,31 +1,24 @@
-import smtplib
 import os
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import resend
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # Email Configuration
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+resend.api_key = RESEND_API_KEY
+
+# Keep these for diagnostic/transitional purposes if needed, 
+# but we are moving to Resend
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-
-# Robust port parsing
-raw_port = os.getenv("SMTP_PORT", "587")
-try:
-    SMTP_PORT = int(raw_port)
-except (ValueError, TypeError):
-    SMTP_PORT = 587
-
 SMTP_USER = os.getenv("SMTP_USER", "")
-# Gmail App Passwords often have spaces (e.g. "xxxx xxxx xxxx xxxx"), remove them
-SMTP_PASS = os.getenv("SMTP_PASS", "").replace(" ", "")
-FROM_EMAIL = os.getenv("FROM_EMAIL", SMTP_USER)
+FROM_EMAIL = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
 APP_NAME = "RCLH S16 Rugby App"
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://s16-nine.vercel.app")
 
 def send_password_reset_email(to_email: str, token: str, user_name: str = "amigo"):
     """
-    Sends a premium HTML password reset email.
+    Sends a premium HTML password reset email using Resend.
     """
     reset_link = f"{FRONTEND_URL}/reset-password?token={token}"
     
@@ -90,32 +83,27 @@ def send_password_reset_email(to_email: str, token: str, user_name: str = "amigo
     </html>
     """
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = FROM_EMAIL
-    msg["To"] = to_email
-
-    msg.attach(MIMEText(html_content, "html"))
-
-    if not SMTP_USER or not SMTP_PASS:
-        print(f"WARNING: Email not sent to {to_email}. SMTP credentials missing in .env.")
-        print(f"Token: {token}")
+    if not RESEND_API_KEY:
+        print(f"WARNING: RESEND_API_KEY missing. Cannot send email to {to_email}.")
+        print(f"DEBUG: Password Reset Link: {reset_link}")
         return False
 
     try:
-        if SMTP_PORT == 465:
-            # Use SSL for port 465
-            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
-                server.login(SMTP_USER, SMTP_PASS)
-                server.sendmail(FROM_EMAIL, to_email, msg.as_string())
-        else:
-            # Use STARTTLS for other ports (like 587)
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
-                server.starttls()
-                server.login(SMTP_USER, SMTP_PASS)
-                server.sendmail(FROM_EMAIL, to_email, msg.as_string())
+        # Use Resend to send the email
+        # Note: If no custom domain is verified, FROM_EMAIL must be "onboarding@resend.dev"
+        # and TO_EMAIL must be the owner of the Resend account.
+        params = {
+            "from": f"{APP_NAME} <onboarding@resend.dev>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html_content,
+        }
+        
+        email = resend.Emails.send(params)
+        print(f"INFO: Email sent via Resend. ID: {email.get('id')}")
         return True
     except Exception as e:
-        print(f"ERROR: Failed to send email to {to_email}: {e}")
+        print(f"ERROR: Failed to send email via Resend to {to_email}: {e}")
+        # Always log the link as fallback
         print(f"DEBUG: Password Reset Link for {to_email}: {reset_link}")
         return False

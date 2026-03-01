@@ -591,35 +591,31 @@ def auth_diagnostic():
     import socket
     from utils import email_utils
     
-    # Check network connectivity
+    # Check network connectivity (SMTP is no longer primary, but good to know)
     net_status = {}
     for port in [465, 587]:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(3)
         try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(3)
             result = s.connect_ex(('smtp.gmail.com', port))
             net_status[f"port_{port}"] = "OPEN" if result == 0 else f"CLOSED (code {result})"
+            s.close()
         except Exception as e:
             net_status[f"port_{port}"] = f"ERROR: {e}"
-        finally:
-            s.close()
 
     return {
         "status": "online",
+        "email_method": "Resend API",
         "network_test": net_status,
-        "smtp": {
-            "host": email_utils.SMTP_HOST,
-            "port": email_utils.SMTP_PORT,
-            "user": email_utils.SMTP_USER,
-            "has_pass": bool(email_utils.SMTP_PASS),
-            "pass_length": len(email_utils.SMTP_PASS) if email_utils.SMTP_PASS else 0,
-            "from": email_utils.FROM_EMAIL
+        "resend": {
+            "has_key": bool(email_utils.RESEND_API_KEY),
+            "key_prefix": email_utils.RESEND_API_KEY[:5] if email_utils.RESEND_API_KEY else None
         },
         "frontend_url": email_utils.FRONTEND_URL,
         "env_debug": {
+            "RESEND_API_KEY": "PRESENT" if os.getenv("RESEND_API_KEY") else "MISSING",
             "SMTP_HOST": os.getenv("SMTP_HOST"),
-            "SMTP_PORT": os.getenv("SMTP_PORT"),
-            "SMTP_USER": os.getenv("SMTP_USER")
+            "SMTP_PORT": os.getenv("SMTP_PORT")
         }
     }
 
