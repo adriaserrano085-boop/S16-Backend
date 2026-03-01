@@ -387,6 +387,21 @@ def assign_role(
     
     return target_user
 
+@app.get("/users/all", response_model=List[schemas.UserResponse])
+@app.get("/api/v1/users/all", response_model=List[schemas.UserResponse])
+def get_all_users(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Lista de todos los usuarios (solo para ADMIN).
+    """
+    if current_user.role != models.RoleEnum.ADMIN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only ADMIN can access this")
+        
+    users = db.query(models.User).all()
+    return users
+
 @app.get("/users/pending", response_model=List[schemas.UserResponse])
 @app.get("/api/v1/users/pending", response_model=List[schemas.UserResponse])
 def get_pending_users(
