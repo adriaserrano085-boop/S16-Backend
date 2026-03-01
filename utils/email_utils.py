@@ -17,7 +17,8 @@ except (ValueError, TypeError):
     SMTP_PORT = 587
 
 SMTP_USER = os.getenv("SMTP_USER", "")
-SMTP_PASS = os.getenv("SMTP_PASS", "")
+# Gmail App Passwords often have spaces (e.g. "xxxx xxxx xxxx xxxx"), remove them
+SMTP_PASS = os.getenv("SMTP_PASS", "").replace(" ", "")
 FROM_EMAIL = os.getenv("FROM_EMAIL", SMTP_USER)
 APP_NAME = "RCLH S16 Rugby App"
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://s16-nine.vercel.app")
