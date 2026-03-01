@@ -52,6 +52,7 @@ startup_error = None
 import models
 import schemas
 import auth_utils
+from utils import email_utils
 from database import engine, get_db
 from dependencies import verify_role_assignment, verify_family_link_permission, get_current_user
 
@@ -507,6 +508,62 @@ def link_family_player(
     db.commit()
     
     return {"message": "Family member successfully linked to player."}
+
+@app.post("/api/v1/auth/request-reset")
+def request_password_reset(request: schemas.PasswordResetRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email.ilike(request.email)).first()
+    if not user:
+        # Don't reveal if user exists or not for security, but we'll return 200
+        return {"message": "Si el correo está registrado, recibirás un enlace de recuperación."}
+    
+    # Generate token
+    token = auth_utils.create_password_reset_token(user.email)
+    
+    # Try to find a name for personalization
+    user_name = "amigo"
+    try:
+        import models_auto
+        # Check Staff
+        staff = db.query(models_auto.Staff).filter(models_auto.Staff.auth_id == str(user.id)).first()
+        if staff:
+            user_name = staff.nombre
+        else:
+            # Check Jugadores highlight the email field is lowercase
+            jugador = db.query(models_auto.JugadoresPropios).filter(models_auto.JugadoresPropios.email.ilike(user.email)).first()
+            if jugador:
+                user_name = jugador.nombre
+            else:
+                # Check Familias
+                familia = db.query(models_auto.Familias).filter(models_auto.Familias.id_usuario == str(user.id)).first()
+                if familia:
+                    user_name = familia.nombre_completo.split(' ')[0]
+    except Exception as e:
+        logger.error(f"Error finding name for email personalization: {e}")
+
+    # Send email
+    success = email_utils.send_password_reset_email(user.email, token, user_name)
+    
+    if success:
+        return {"message": "Si el correo está registrado, recibirás un enlace de recuperación."}
+    else:
+        # We might want to return that we couldn't send the email for debugging, 
+        # but for production we stick to the generic message.
+        return {"message": "Error al enviar el correo. Por favor, contacta con el administrador.", "debug_token": token}
+
+@app.post("/api/v1/auth/reset-password")
+def reset_password(request: schemas.PasswordReset, db: Session = Depends(get_db)):
+    email = auth_utils.verify_password_reset_token(request.token)
+    if not email:
+        raise HTTPException(status_code=400, detail="El enlace ha caducado o no es válido.")
+    
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+    
+    user.hashed_password = auth_utils.get_password_hash(request.new_password)
+    db.commit()
+    
+    return {"message": "Tu contraseña ha sido actualizada correctamente."}
 
 if __name__ == "__main__":
     import uvicorn
