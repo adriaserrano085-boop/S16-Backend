@@ -588,9 +588,25 @@ def reset_password(request: schemas.PasswordReset, db: Session = Depends(get_db)
 @app.get("/api/v1/auth/diagnostic")
 def auth_diagnostic():
     import os
+    import socket
     from utils import email_utils
+    
+    # Check network connectivity
+    net_status = {}
+    for port in [465, 587]:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(3)
+        try:
+            result = s.connect_ex(('smtp.gmail.com', port))
+            net_status[f"port_{port}"] = "OPEN" if result == 0 else f"CLOSED (code {result})"
+        except Exception as e:
+            net_status[f"port_{port}"] = f"ERROR: {e}"
+        finally:
+            s.close()
+
     return {
         "status": "online",
+        "network_test": net_status,
         "smtp": {
             "host": email_utils.SMTP_HOST,
             "port": email_utils.SMTP_PORT,
