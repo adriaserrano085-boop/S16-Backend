@@ -148,6 +148,43 @@ def read_jugadores_propios_list(
         query = query.filter(models.JugadoresPropios.email == email)
     return query.offset(skip).limit(limit).all()
 
+@router.get("/jugadores_propios/{item_id}", response_model=schemas.JugadoresPropiosResponse, tags=["JugadoresPropios"])
+def read_jugadores_propios(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(models.JugadoresPropios).filter(models.JugadoresPropios.id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Jugador not found")
+    return item
+
+@router.post("/jugadores_propios", response_model=schemas.JugadoresPropiosResponse, tags=["JugadoresPropios"])
+def create_jugador_propio(obj_in: schemas.JugadoresPropiosCreate, db: Session = Depends(get_db)):
+    db_obj = models.JugadoresPropios(**obj_in.model_dump())
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+@router.put("/jugadores_propios/{item_id}", response_model=schemas.JugadoresPropiosResponse, tags=["JugadoresPropios"])
+def update_jugador_propio(item_id: str, obj_in: schemas.JugadoresPropiosUpdate, db: Session = Depends(get_db)):
+    db_obj = db.query(models.JugadoresPropios).filter(models.JugadoresPropios.id == item_id).first()
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Jugador not found")
+    
+    update_data = obj_in.model_dump(exclude_unset=True)
+    for field in update_data:
+        setattr(db_obj, field, update_data[field])
+    
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+@router.delete("/jugadores_propios/{item_id}", tags=["JugadoresPropios"])
+def delete_jugador_propio(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(models.JugadoresPropios).filter(models.JugadoresPropios.id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Jugador not found")
+    db.delete(item)
+    db.commit()
+    return {"message": "Deleted successfully"}
+
 # --- CRUD for Eventos ---
 @router.get("/eventos", response_model=List[schemas.EventosResponse], tags=["Eventos"])
 def read_eventos_list(

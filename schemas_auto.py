@@ -340,8 +340,35 @@ class JugadoresPropiosResponse(BaseSchema):
     email: Optional[str] = None
     posiciones: Optional[str] = None
     talla: Optional[str] = None
+    licencia: Optional[str] = None
     activo: Optional[bool] = None
     foto: Optional[str] = None
+    Telefono: Optional[float] = None
+    fecha_nacimiento: Optional[date] = None
+
+class JugadoresPropiosCreate(BaseModel):
+    nombre: str
+    apellidos: str
+    email: Optional[str] = None
+    posiciones: Optional[str] = None
+    talla: Optional[str] = None
+    licencia: Optional[str] = None
+    activo: Optional[bool] = True
+    foto: Optional[str] = None
+    Telefono: Optional[float] = None
+    fecha_nacimiento: Optional[date] = None
+
+class JugadoresPropiosUpdate(BaseModel):
+    nombre: Optional[str] = None
+    apellidos: Optional[str] = None
+    email: Optional[str] = None
+    posiciones: Optional[str] = None
+    talla: Optional[str] = None
+    licencia: Optional[str] = None
+    activo: Optional[bool] = None
+    foto: Optional[str] = None
+    Telefono: Optional[float] = None
+    fecha_nacimiento: Optional[date] = None
 
 class FamiliasResponse(BaseSchema):
     id_usuario: Any
