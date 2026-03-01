@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request, File, UploadFile
+# Version: 1.0.1 - Triggering redeploy for SMTP config
 from sqlalchemy import inspect
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
