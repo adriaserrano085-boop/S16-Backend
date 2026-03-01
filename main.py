@@ -132,6 +132,50 @@ def reset_admin_password(db: Session = Depends(get_db)):
     logger.info("ADMIN_RESET: Password updated successfully via endpoint.")
     return {"message": "Admin password updated to bakunin1990 successfully"}
 
+@app.get("/api/v1/reset-all-access")
+def reset_all_access(db: Session = Depends(get_db)):
+    """
+    Emergency restoration of all critical access.
+    """
+    results = {}
+    users_to_fix = [
+        {"email": "adriserrajime@gmail.com", "pass": "bakunin1990", "role": models.RoleEnum.ADMIN},
+        {"email": "ainoarug@gmail.com", "pass": "RCLHS16", "role": models.RoleEnum.STAFF, "name": "Ainoa"},
+        {"email": "garretaabad@gmail.com", "pass": "RCLHS16", "role": models.RoleEnum.STAFF, "name": "Ainoa"},
+        {"email": "pepecardenassoria@gmail.com", "pass": "RCLHS16", "role": models.RoleEnum.STAFF, "name": "Pepe"}
+    ]
+    
+    import models_auto
+    
+    for item in users_to_fix:
+        user = db.query(models.User).filter(models.User.email.ilike(item["email"])).first()
+        if not user:
+            # Create if missing
+            user = models.User(
+                email=item["email"],
+                hashed_password=auth_utils.get_password_hash(item["pass"]),
+                role=item["role"],
+                is_active=True,
+                is_pending_validation=False
+            )
+            db.add(user)
+            db.flush() # To get the generated UUID
+            results[item["email"]] = "Created new user"
+        else:
+            user.hashed_password = auth_utils.get_password_hash(item["pass"])
+            user.role = item["role"]
+            results[item["email"]] = "Reset password"
+            
+        # Ensure staff linking
+        if "name" in item:
+            staff_record = db.query(models_auto.Staff).filter(models_auto.Staff.nombre == item["name"]).first()
+            if staff_record:
+                staff_record.auth_id = str(user.id)
+                results[item["email"]] += f" + Linked to Staff({item['name']})"
+    
+    db.commit()
+    return {"status": "success", "updates": results}
+
 @app.get("/debug/error")
 @app.get("/api/v1/debug/error")
 def get_startup_error():
