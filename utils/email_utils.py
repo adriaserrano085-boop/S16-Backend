@@ -95,11 +95,17 @@ def send_password_reset_email(to_email: str, token: str, user_name: str = "amigo
         return False
 
     try:
-        # Added timeout to prevent hanging the whole request
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.sendmail(FROM_EMAIL, to_email, msg.as_string())
+        if SMTP_PORT == 465:
+            # Use SSL for port 465
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+                server.login(SMTP_USER, SMTP_PASS)
+                server.sendmail(FROM_EMAIL, to_email, msg.as_string())
+        else:
+            # Use STARTTLS for other ports (like 587)
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+                server.starttls()
+                server.login(SMTP_USER, SMTP_PASS)
+                server.sendmail(FROM_EMAIL, to_email, msg.as_string())
         return True
     except Exception as e:
         print(f"ERROR: Failed to send email to {to_email}: {e}")
