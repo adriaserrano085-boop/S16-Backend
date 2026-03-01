@@ -10,7 +10,7 @@ class UserCreate(UserBase):
     role: RoleEnum = RoleEnum.JUGADOR
 
 class UserResponse(UserBase):
-    id: int
+    id: str
     role: RoleEnum
     is_active: bool
     is_pending_validation: bool
@@ -19,12 +19,12 @@ class UserResponse(UserBase):
         from_attributes = True
 
 class RoleAssignmentRequest(BaseModel):
-    target_user_id: int
+    target_user_id: str
     new_role: RoleEnum
 
 class FamilyLinkRequest(BaseModel):
-    family_user_id: int
-    player_user_id: int
+    family_user_id: str
+    player_user_id: str
 
 # --- Auth Schemas ---
 class Token(BaseModel):

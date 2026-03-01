@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime, Float
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime, Float, text
+import uuid
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
@@ -14,13 +15,13 @@ class RoleEnum(str, enum.Enum):
 class FamilyPlayers(Base):
     __tablename__ = "family_players"
     id = Column(Integer, primary_key=True, index=True)
-    family_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    player_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    family_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    player_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(RoleEnum), default=RoleEnum.JUGADOR, nullable=False)
@@ -48,7 +49,7 @@ class PlayerStats(Base):
     __tablename__ = "player_stats"
 
     id = Column(Integer, primary_key=True, index=True)
-    player_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
+    player_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
     
     # Melés
     scrums_won = Column(Integer, default=0)
