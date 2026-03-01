@@ -13,7 +13,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 1 week
 
 pwd_context = CryptContext(
-    schemes=["sha256_crypt", "bcrypt"], 
+    schemes=["bcrypt", "sha256_crypt"], 
     deprecated="auto",
     bcrypt__truncate_error=False
 )
