@@ -96,7 +96,7 @@ class JugadoresPropios(Base):
     activo = Column(Boolean)
     created_at = Column(DateTime(timezone=True))
     updated_at = Column(DateTime(timezone=True))
-    Telefono = Column(Float)
+    Telefono = Column(String)
     fecha_nacimiento = Column(Date)
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     nombre = Column(String)

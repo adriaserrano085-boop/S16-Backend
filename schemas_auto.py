@@ -343,7 +343,7 @@ class JugadoresPropiosResponse(BaseSchema):
     licencia: Optional[str] = None
     activo: Optional[bool] = None
     foto: Optional[str] = None
-    Telefono: Optional[float] = None
+    Telefono: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
 
 class JugadoresPropiosCreate(BaseModel):
@@ -355,7 +355,7 @@ class JugadoresPropiosCreate(BaseModel):
     licencia: Optional[str] = None
     activo: Optional[bool] = True
     foto: Optional[str] = None
-    Telefono: Optional[float] = None
+    Telefono: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
 
 class JugadoresPropiosUpdate(BaseModel):
@@ -367,7 +367,7 @@ class JugadoresPropiosUpdate(BaseModel):
     licencia: Optional[str] = None
     activo: Optional[bool] = None
     foto: Optional[str] = None
-    Telefono: Optional[float] = None
+    Telefono: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
 
 class FamiliasResponse(BaseSchema):
