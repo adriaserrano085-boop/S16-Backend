@@ -1,24 +1,25 @@
 import os
-import resend
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # Email Configuration
-RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-resend.api_key = RESEND_API_KEY
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
 
-# Keep these for diagnostic/transitional purposes if needed, 
-# but we are moving to Resend
-SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_USER = os.getenv("SMTP_USER", "")
-FROM_EMAIL = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
+# Configure API key authorization: api-key
+configuration = sib_api_v3_sdk.Configuration()
+configuration.api_key['api-key'] = BREVO_API_KEY
+
 APP_NAME = "RCLH S16 Rugby App"
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://s16-nine.vercel.app")
+# By default, Brevo sends from the account owner's email if not specified
+SENDER_EMAIL = os.getenv("FROM_EMAIL", "adriserrajime@gmail.com") 
 
 def send_password_reset_email(to_email: str, token: str, user_name: str = "amigo"):
     """
-    Sends a premium HTML password reset email using Resend.
+    Sends a premium HTML password reset email using Brevo (Sendinblue) API.
     """
     reset_link = f"{FRONTEND_URL}/reset-password?token={token}"
     
@@ -83,27 +84,32 @@ def send_password_reset_email(to_email: str, token: str, user_name: str = "amigo
     </html>
     """
 
-    if not RESEND_API_KEY:
-        print(f"WARNING: RESEND_API_KEY missing. Cannot send email to {to_email}.")
+    if not BREVO_API_KEY:
+        print(f"WARNING: BREVO_API_KEY missing. Cannot send email to {to_email}.")
         print(f"DEBUG: Password Reset Link: {reset_link}")
         return False
 
+    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+    
+    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+        to=[{"email": to_email, "name": user_name}],
+        reply_to={"email": SENDER_EMAIL, "name": APP_NAME},
+        headers={"Some-Custom-Name": "unique-id-1234"},
+        html_content=html_content,
+        sender={"email": SENDER_EMAIL, "name": APP_NAME},
+        subject=subject
+    )
+
     try:
-        # Use Resend to send the email
-        # Note: If no custom domain is verified, FROM_EMAIL must be "onboarding@resend.dev"
-        # and TO_EMAIL must be the owner of the Resend account.
-        params = {
-            "from": f"{APP_NAME} <onboarding@resend.dev>",
-            "to": [to_email],
-            "subject": subject,
-            "html": html_content,
-        }
-        
-        email = resend.Emails.send(params)
-        print(f"INFO: Email sent via Resend. ID: {email.get('id')}")
+        api_response = api_instance.send_transac_email(send_smtp_email)
+        print(f"INFO: Email sent via Brevo. Response: {api_response}")
         return True
+    except ApiException as e:
+        print(f"ERROR: Exception when calling TransactionalEmailsApi->send_transac_email: {e}")
+        # Fallback to logging the link
+        print(f"DEBUG: Password Reset Link for {to_email}: {reset_link}")
+        return False
     except Exception as e:
-        print(f"ERROR: Failed to send email via Resend to {to_email}: {e}")
-        # Always log the link as fallback
+        print(f"ERROR: General error sending email via Brevo to {to_email}: {e}")
         print(f"DEBUG: Password Reset Link for {to_email}: {reset_link}")
         return False

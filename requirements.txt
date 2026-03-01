@@ -10,3 +10,4 @@ python-jose[cryptography]
 python-multipart>=0.0.9
 email-validator>=2.1.0.post1
 resend>=0.8.0
+sib-api-v3-sdk

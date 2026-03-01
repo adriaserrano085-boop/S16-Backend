@@ -605,17 +605,15 @@ def auth_diagnostic():
 
     return {
         "status": "online",
-        "email_method": "Resend API",
+        "email_method": "Brevo API",
         "network_test": net_status,
-        "resend": {
-            "has_key": bool(email_utils.RESEND_API_KEY),
-            "key_prefix": email_utils.RESEND_API_KEY[:5] if email_utils.RESEND_API_KEY else None
+        "brevo": {
+            "has_key": bool(email_utils.BREVO_API_KEY),
+            "key_prefix": email_utils.BREVO_API_KEY[:5] if email_utils.BREVO_API_KEY else None
         },
         "frontend_url": email_utils.FRONTEND_URL,
         "env_debug": {
-            "RESEND_API_KEY": "PRESENT" if os.getenv("RESEND_API_KEY") else "MISSING",
-            "SMTP_HOST": os.getenv("SMTP_HOST"),
-            "SMTP_PORT": os.getenv("SMTP_PORT")
+            "BREVO_API_KEY": "PRESENT" if os.getenv("BREVO_API_KEY") else "MISSING"
         }
     }
 
