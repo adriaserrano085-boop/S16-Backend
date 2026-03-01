@@ -585,6 +585,28 @@ def reset_password(request: schemas.PasswordReset, db: Session = Depends(get_db)
     
     return {"message": "Tu contraseña ha sido actualizada correctamente."}
 
+@app.get("/api/v1/auth/diagnostic")
+def auth_diagnostic():
+    import os
+    from utils import email_utils
+    return {
+        "status": "online",
+        "smtp": {
+            "host": email_utils.SMTP_HOST,
+            "port": email_utils.SMTP_PORT,
+            "user": email_utils.SMTP_USER,
+            "has_pass": bool(email_utils.SMTP_PASS),
+            "pass_length": len(email_utils.SMTP_PASS) if email_utils.SMTP_PASS else 0,
+            "from": email_utils.FROM_EMAIL
+        },
+        "frontend_url": email_utils.FRONTEND_URL,
+        "env_debug": {
+            "SMTP_HOST": os.getenv("SMTP_HOST"),
+            "SMTP_PORT": os.getenv("SMTP_PORT"),
+            "SMTP_USER": os.getenv("SMTP_USER")
+        }
+    }
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8080))
