@@ -546,9 +546,11 @@ def request_password_reset(request: schemas.PasswordResetRequest, db: Session = 
     if success:
         return {"message": "Si el correo está registrado, recibirás un enlace de recuperación."}
     else:
-        # We might want to return that we couldn't send the email for debugging, 
-        # but for production we stick to the generic message.
-        return {"message": "Error al enviar el correo. Por favor, contacta con el administrador.", "debug_token": token}
+        # Raise exception so frontend knows it failed
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Error al enviar el correo. Verifica tu configuración SMTP en el servidor."
+        )
 
 @app.post("/api/v1/auth/reset-password")
 def reset_password(request: schemas.PasswordReset, db: Session = Depends(get_db)):

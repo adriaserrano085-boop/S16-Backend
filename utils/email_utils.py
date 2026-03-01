@@ -102,4 +102,5 @@ def send_password_reset_email(to_email: str, token: str, user_name: str = "amigo
         return True
     except Exception as e:
         print(f"ERROR: Failed to send email to {to_email}: {e}")
+        print(f"DEBUG: Password Reset Link for {to_email}: {reset_link}")
         return False
