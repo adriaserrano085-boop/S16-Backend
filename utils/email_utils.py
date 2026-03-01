@@ -95,7 +95,8 @@ def send_password_reset_email(to_email: str, token: str, user_name: str = "amigo
         return False
 
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        # Added timeout to prevent hanging the whole request
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASS)
             server.sendmail(FROM_EMAIL, to_email, msg.as_string())

@@ -512,45 +512,62 @@ def link_family_player(
 
 @app.post("/api/v1/auth/request-reset")
 def request_password_reset(request: schemas.PasswordResetRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email.ilike(request.email)).first()
-    if not user:
-        # Don't reveal if user exists or not for security, but we'll return 200
-        return {"message": "Si el correo está registrado, recibirás un enlace de recuperación."}
-    
-    # Generate token
-    token = auth_utils.create_password_reset_token(user.email)
-    
-    # Try to find a name for personalization
-    user_name = "amigo"
+    logger.info(f"Password reset requested for: {request.email}")
     try:
-        import models_auto
-        # Check Staff
-        staff = db.query(models_auto.Staff).filter(models_auto.Staff.auth_id == str(user.id)).first()
-        if staff:
-            user_name = staff.nombre
-        else:
-            # Check Jugadores highlight the email field is lowercase
-            jugador = db.query(models_auto.JugadoresPropios).filter(models_auto.JugadoresPropios.email.ilike(user.email)).first()
-            if jugador:
-                user_name = jugador.nombre
+        user = db.query(models.User).filter(models.User.email.ilike(request.email)).first()
+        if not user:
+            logger.info("User not found for password reset request")
+            return {"message": "Si el correo está registrado, recibirás un enlace de recuperación."}
+        
+        logger.info(f"User found: {user.email}. Generating token...")
+        # Generate token
+        token = auth_utils.create_password_reset_token(user.email)
+        
+        # Try to find a name for personalization
+        user_name = "amigo"
+        try:
+            import models_auto
+            # Check Staff
+            logger.info("Looking for staff name...")
+            staff = db.query(models_auto.Staff).filter(models_auto.Staff.auth_id == str(user.id)).first()
+            if staff:
+                user_name = staff.nombre
             else:
-                # Check Familias
-                familia = db.query(models_auto.Familias).filter(models_auto.Familias.id_usuario == str(user.id)).first()
-                if familia:
-                    user_name = familia.nombre_completo.split(' ')[0]
-    except Exception as e:
-        logger.error(f"Error finding name for email personalization: {e}")
+                logger.info("Looking for player name...")
+                # Check Jugadores highlight the email field is lowercase
+                jugador = db.query(models_auto.JugadoresPropios).filter(models_auto.JugadoresPropios.email.ilike(user.email)).first()
+                if jugador:
+                    user_name = jugador.nombre
+                else:
+                    logger.info("Looking for family name...")
+                    # Check Familias
+                    familia = db.query(models_auto.Familias).filter(models_auto.Familias.id_usuario == str(user.id)).first()
+                    if familia:
+                        user_name = familia.nombre_completo.split(' ')[0]
+        except Exception as e:
+            logger.error(f"Error finding name for email personalization: {e}")
 
-    # Send email
-    success = email_utils.send_password_reset_email(user.email, token, user_name)
-    
-    if success:
-        return {"message": "Si el correo está registrado, recibirás un enlace de recuperación."}
-    else:
-        # Raise exception so frontend knows it failed
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail="Error al enviar el correo. Verifica tu configuración SMTP en el servidor."
+        logger.info(f"Sending email to {user.email} as {user_name}...")
+        # Send email
+        success = email_utils.send_password_reset_email(user.email, token, user_name)
+        
+        if success:
+            logger.info("Email sent successfully")
+            return {"message": "Si el correo está registrado, recibirás un enlace de recuperación."}
+        else:
+            logger.error("Email utility reported failure")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                detail="Error al enviar el correo. Verifica tu configuración SMTP en el servidor."
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"FATAL ERROR in request_password_reset: {e}")
+        logger.error(traceback.format_exc())
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Error interno del servidor al procesar la solicitud.", "error": str(e)}
         )
 
 @app.post("/api/v1/auth/reset-password")
