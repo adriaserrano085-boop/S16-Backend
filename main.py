@@ -363,7 +363,9 @@ def get_current_user_profile(
         "email": current_user.email,
         "role": current_user.role,
         "is_active": current_user.is_active,
-        "is_pending_validation": current_user.is_pending_validation
+        "is_pending_validation": current_user.is_pending_validation,
+        "debug_role": str(current_user.role),
+        "debug_is_admin": str(current_user.role) == "ADMIN"
     }
     
     # Add domain-specific IDs with robust error handling
@@ -440,8 +442,9 @@ def get_all_users(
     """
     Lista de todos los usuarios (solo para ADMIN).
     """
-    if current_user.role != models.RoleEnum.ADMIN:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only ADMIN can access this")
+    if str(current_user.role) != "ADMIN":
+        logger.warning(f"PERM_ERROR: User {current_user.email} (role: {current_user.role}) denied access to /users/all")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Only ADMIN can access this. Your role is {current_user.role}")
         
     users = db.query(models.User).all()
     return users
