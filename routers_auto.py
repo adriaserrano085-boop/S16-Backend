@@ -614,7 +614,7 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
             db_entrenamiento.trabajo_conjunto = obj_in.trabajo_conjunto
         else:
             new_entrenamiento = models.Entrenamientos(
-                id=str(uuid.uuid4()),
+                id_entrenamiento=str(uuid.uuid4()),
                 evento=actual_evento_id,
                 calentamiento=obj_in.calentamiento,
                 trabajo_separado=obj_in.trabajo_separado,
