@@ -431,10 +431,20 @@ def assign_role(
     # 1. Validate if current user can assign the target role
     verify_role_assignment(current_user.role, request.new_role)
     
+    # Strict extra check: Staff cannot assign ADMIN or STAFF roles
+    if current_user.role == models.RoleEnum.STAFF:
+        if request.new_role in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
+            raise HTTPException(status_code=403, detail="STAFF no puede asignar roles de administrador o staff.")
+    
     # 2. Find target user
     target_user = db.query(models.User).filter(models.User.id == request.target_user_id).first()
     if not target_user:
         raise HTTPException(status_code=404, detail="Target user not found")
+        
+    # Strict extra check: Staff cannot modify an existing ADMIN or STAFF user
+    if current_user.role == models.RoleEnum.STAFF:
+        if target_user.role in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
+            raise HTTPException(status_code=403, detail="STAFF no puede modificar a administradores u otros miembros del staff.")
     
     # 3. Update role
     target_user.role = request.new_role
@@ -461,22 +471,42 @@ def link_user_profile(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
+    # Extra check: Staff cannot link another STAFF profile or modify admins
+    if current_user.role == models.RoleEnum.STAFF:
+        if request.profile_type == "STAFF" or user.role in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
+            raise HTTPException(status_code=403, detail="STAFF no puede vincular perfiles de administración o staff.")
+        
     import models_auto
     
     if request.profile_type == "STAFF":
-        staff_record = db.query(models_auto.Staff).filter(models_auto.Staff.id == request.profile_id).first()
+        # The frontend sends UUID string for profile_id, we need to make sure we query it safely 
+        # as it corresponds to Staff.id which is String in models_auto.
+        staff_record = db.query(models_auto.Staff).filter(
+            (models_auto.Staff.id == request.profile_id) |
+            (models_auto.Staff.id == str(request.profile_id))
+        ).first()
+        
         if not staff_record:
             raise HTTPException(status_code=404, detail="Staff record not found")
+            
         staff_record.auth_id = str(user.id)
+        user.is_pending_validation = False
     elif request.profile_type == "JUGADOR":
-        jugador_record = db.query(models_auto.JugadoresPropios).filter(models_auto.JugadoresPropios.id == request.profile_id).first()
+        jugador_record = db.query(models_auto.JugadoresPropios).filter(
+            (models_auto.JugadoresPropios.id == request.profile_id) |
+            (models_auto.JugadoresPropios.id == str(request.profile_id))
+        ).first()
         if not jugador_record:
             raise HTTPException(status_code=404, detail="Player record not found")
         # For players, we link by setting their email to match the auth account's email
         # or keeping it as is, but currently the system relies on emails matching.
         jugador_record.email = user.email
+        user.is_pending_validation = False
     else:
         raise HTTPException(status_code=400, detail="Invalid profile type. Must be STAFF or JUGADOR.")
+        
+    db.commit()
+    return {"message": f"Successfully linked {request.profile_type} profile.", "user_id": str(user.id)}
         
     # Once explicitly linked, we can consider them validated
     user.is_pending_validation = False
