@@ -273,6 +273,14 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2Passw
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+        
+    if not user.is_active:
+        logger.warning(f"AUTH: Login failed - User inactive: {email_clean}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cuenta inactiva. Por favor, revisa tu correo y activa tu cuenta antes de iniciar sesión.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     
     logger.info(f"AUTH: Login successful for: {email_clean}")
     # --- Dynamic Role Sync (Auto-RBAC) ---
@@ -435,6 +443,47 @@ def assign_role(
     
     return target_user
 
+@app.post("/users/link-profile")
+@app.post("/api/v1/users/link-profile")
+def link_user_profile(
+    request: schemas.ProfileLinkRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Links a user account to a specific Staff or Player profile.
+    Only Staff or Admin can do this.
+    """
+    if current_user.role not in [models.RoleEnum.ADMIN, models.RoleEnum.STAFF]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    user = db.query(models.User).filter(models.User.id == request.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    import models_auto
+    
+    if request.profile_type == "STAFF":
+        staff_record = db.query(models_auto.Staff).filter(models_auto.Staff.id == request.profile_id).first()
+        if not staff_record:
+            raise HTTPException(status_code=404, detail="Staff record not found")
+        staff_record.auth_id = str(user.id)
+    elif request.profile_type == "JUGADOR":
+        jugador_record = db.query(models_auto.JugadoresPropios).filter(models_auto.JugadoresPropios.id == request.profile_id).first()
+        if not jugador_record:
+            raise HTTPException(status_code=404, detail="Player record not found")
+        # For players, we link by setting their email to match the auth account's email
+        # or keeping it as is, but currently the system relies on emails matching.
+        jugador_record.email = user.email
+    else:
+        raise HTTPException(status_code=400, detail="Invalid profile type. Must be STAFF or JUGADOR.")
+        
+    # Once explicitly linked, we can consider them validated
+    user.is_pending_validation = False
+    db.commit()
+    
+    return {"message": f"User successfully linked to {request.profile_type} profile"}
+
 @app.get("/users/all", response_model=List[schemas.UserResponse])
 @app.get("/api/v1/users/all", response_model=List[schemas.UserResponse])
 def get_all_users(
@@ -584,6 +633,63 @@ def reset_password(request: schemas.PasswordReset, db: Session = Depends(get_db)
     db.commit()
     
     return {"message": "Tu contraseña ha sido actualizada correctamente."}
+
+@app.post("/api/v1/auth/register")
+def register_user(request: schemas.UserRegisterRequest, db: Session = Depends(get_db)):
+    email_clean = request.email.strip().lower()
+    logger.info(f"Registro solicitado para: {email_clean}")
+    
+    if request.password != request.confirm_password:
+        raise HTTPException(status_code=400, detail="Las contraseñas no coinciden.")
+        
+    if len(request.password) < 6:
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 6 caracteres.")
+        
+    existing_user = db.query(models.User).filter(models.User.email.ilike(email_clean)).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="El correo electrónico ya está registrado.")
+        
+    # Crear usuario inactivo y pendiente de rol
+    new_user = models.User(
+        email=email_clean,
+        hashed_password=auth_utils.get_password_hash(request.password),
+        role=models.RoleEnum.JUGADOR, # Rol por defecto hasta que lo asigne un admin
+        is_active=False,
+        is_pending_validation=True
+    )
+    
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    # Send activation email
+    token = auth_utils.create_activation_token(new_user.email)
+    success = email_utils.send_activation_email(new_user.email, token)
+    
+    if success:
+        return {"message": "Cuenta creada con éxito. Por favor, revisa tu correo para activarla."}
+    else:
+        # En caso de fallo de correo, permitimos activar manualmente o manejarlo luego, pero no deshacemos el registro para no perder al usuario.
+        logger.error(f"Fallo al enviar correo de activación a {email_clean}")
+        return {"message": "Cuenta creada, pero hubo un problema al enviar el correo de activación. Contacta con el administrador."}
+
+@app.get("/api/v1/auth/activate")
+def activate_user(token: str, db: Session = Depends(get_db)):
+    email = auth_utils.verify_activation_token(token)
+    if not email:
+        raise HTTPException(status_code=400, detail="El enlace de activación ha caducado o no es válido.")
+        
+    user = db.query(models.User).filter(models.User.email.ilike(email)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+        
+    if user.is_active:
+        return {"message": "Tu cuenta ya estaba activada. Puedes iniciar sesión."}
+        
+    user.is_active = True
+    db.commit()
+    
+    return {"message": "¡Cuenta activada con éxito! Ya puedes iniciar sesión. Recuerda que aunque inicies sesión, es posible que el administrador deba asignarte tu rol final."}
 
 @app.get("/api/v1/auth/diagnostic")
 def auth_diagnostic():

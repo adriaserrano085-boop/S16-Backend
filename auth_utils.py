@@ -59,10 +59,24 @@ def create_password_reset_token(email: str):
     to_encode = {"sub": email, "exp": expire, "type": "password_reset"}
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+def create_activation_token(email: str):
+    expire = datetime.utcnow() + timedelta(hours=48)
+    to_encode = {"sub": email, "exp": expire, "type": "account_activation"}
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 def verify_password_reset_token(token: str) -> Optional[str]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload.get("type") != "password_reset":
+            return None
+        return payload.get("sub")
+    except (JWTError, AttributeError):
+        return None
+
+def verify_activation_token(token: str) -> Optional[str]:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "account_activation":
             return None
         return payload.get("sub")
     except (JWTError, AttributeError):

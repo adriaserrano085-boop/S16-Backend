@@ -27,6 +27,11 @@ class FamilyLinkRequest(BaseModel):
     family_user_id: Union[str, UUID]
     player_user_id: Union[str, UUID]
 
+class ProfileLinkRequest(BaseModel):
+    user_id: Union[str, UUID]
+    profile_type: str
+    profile_id: Union[str, UUID]
+
 # --- Auth Schemas ---
 class Token(BaseModel):
     access_token: str
@@ -46,3 +51,8 @@ class PasswordResetRequest(BaseModel):
 class PasswordReset(BaseModel):
     token: str
     new_password: str
+
+class UserRegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    confirm_password: str
