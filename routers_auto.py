@@ -135,6 +135,19 @@ def read_rivales(item_id: str, db: Session = Depends(get_db)):
     if not item: raise HTTPException(status_code=404, detail="Item not found")
     return item
 
+# --- CRUD for Staff ---
+@router.get("/Staff", response_model=List[schemas.StaffResponse], tags=["Staff"])
+@router.get("/staff", response_model=List[schemas.StaffResponse], tags=["Staff"])
+def read_staff_list(skip: int = 0, limit: int = 1000, db: Session = Depends(get_db)):
+    return db.query(models.Staff).offset(skip).limit(limit).all()
+
+@router.get("/Staff/{item_id}", response_model=schemas.StaffResponse, tags=["Staff"])
+@router.get("/staff/{item_id}", response_model=schemas.StaffResponse, tags=["Staff"])
+def read_staff(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(models.Staff).filter(models.Staff.id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Staff not found")
+    return item
+
 # --- CRUD for JugadoresPropios ---
 @router.get("/jugadores_propios", response_model=List[schemas.JugadoresPropiosResponse], tags=["JugadoresPropios"])
 def read_jugadores_propios_list(
