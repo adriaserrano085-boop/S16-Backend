@@ -328,7 +328,7 @@ class AnalisisPartidoUpdate(BaseModel):
 # --- PRUEBAS FISICAS ---
 class PruebasFisicasBase(BaseSchema):
     id: Any
-    jugador: Optional[Any] = Field(None, validation_alias=AliasChoices("jugador", "jugador_id"), serialization_alias="jugador")
+    jugador_id: Optional[Any] = Field(None, validation_alias=AliasChoices("jugador", "jugador_id"), serialization_alias="jugador_id")
     fecha: Optional[date] = None
     velocidad_10m: Optional[float] = None
     velocidad_10m_2: Optional[float] = None
