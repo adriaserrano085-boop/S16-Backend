@@ -332,7 +332,7 @@ class StaffResponse(BaseSchema):
     apellidos: Optional[str] = None
     email: Optional[str] = None
     activo: Optional[bool] = None
-    auth_id: Optional[str] = None
+    auth_id: Optional[Any] = None
 
 class JugadoresPropiosResponse(BaseSchema):
     id: Any
