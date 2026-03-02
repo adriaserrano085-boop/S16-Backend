@@ -325,6 +325,65 @@ class AnalisisPartidoUpdate(BaseModel):
     video_offset_sec: Optional[int] = None
     raw_json: Optional[Any] = None
 
+# --- PRUEBAS FISICAS ---
+class PruebasFisicasBase(BaseSchema):
+    id: Any
+    jugador: Optional[Any] = Field(None, validation_alias=AliasChoices("jugador", "jugador_id"), serialization_alias="jugador")
+    fecha: Optional[date] = None
+    velocidad_10m: Optional[float] = None
+    velocidad_30m: Optional[float] = None
+    velocidad_80m: Optional[float] = None
+    broncotest: Optional[str] = None
+    course_navette: Optional[float] = None
+    salto_sj: Optional[float] = None
+    salto_cmj: Optional[float] = None
+    salto_rebote: Optional[float] = None
+    salto_horizontal: Optional[float] = None
+    flexiones: Optional[int] = None
+    lanzamiento_pecho: Optional[float] = None
+    lanzamiento_encima_cabeza: Optional[float] = None
+    plancha: Optional[str] = None
+    abdominales: Optional[int] = None
+
+class PruebasFisicasCreate(BaseModel):
+    id: Optional[str] = None
+    jugador_id: str
+    fecha: date
+    velocidad_10m: Optional[float] = None
+    velocidad_30m: Optional[float] = None
+    velocidad_80m: Optional[float] = None
+    broncotest: Optional[str] = None
+    course_navette: Optional[float] = None
+    salto_sj: Optional[float] = None
+    salto_cmj: Optional[float] = None
+    salto_rebote: Optional[float] = None
+    salto_horizontal: Optional[float] = None
+    flexiones: Optional[int] = None
+    lanzamiento_pecho: Optional[float] = None
+    lanzamiento_encima_cabeza: Optional[float] = None
+    plancha: Optional[str] = None
+    abdominales: Optional[int] = None
+
+class PruebasFisicasUpdate(BaseModel):
+    fecha: Optional[date] = None
+    velocidad_10m: Optional[float] = None
+    velocidad_30m: Optional[float] = None
+    velocidad_80m: Optional[float] = None
+    broncotest: Optional[str] = None
+    course_navette: Optional[float] = None
+    salto_sj: Optional[float] = None
+    salto_cmj: Optional[float] = None
+    salto_rebote: Optional[float] = None
+    salto_horizontal: Optional[float] = None
+    flexiones: Optional[int] = None
+    lanzamiento_pecho: Optional[float] = None
+    lanzamiento_encima_cabeza: Optional[float] = None
+    plancha: Optional[str] = None
+    abdominales: Optional[int] = None
+
+class PruebasFisicasResponse(PruebasFisicasBase):
+    pass
+
 # --- OTROS ---
 class StaffResponse(BaseSchema):
     id: Any
@@ -396,3 +455,4 @@ PartidosResponse.model_rebuild()
 PartidosExternosResponse.model_rebuild()
 EntrenamientosDetalleResponse.model_rebuild()
 EntrenamientosConEventoResponse.model_rebuild()
+PruebasFisicasResponse.model_rebuild()

@@ -245,3 +245,34 @@ class AnalisisPartido(Base):
     
     evento_ref = relationship("Eventos", back_populates="analisis")
 
+class PruebasFisicas(Base):
+    __tablename__ = "pruebas_fisicas"
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    jugador_id = Column(String, ForeignKey("jugadores_propios.id"))
+    fecha = Column(Date)
+    
+    # Velocidad
+    velocidad_10m = Column(Float)
+    velocidad_30m = Column(Float)
+    velocidad_80m = Column(Float)
+    
+    # Resistencia
+    broncotest = Column(String)
+    course_navette = Column(Float)
+    
+    # Fuerza Inferior
+    salto_sj = Column(Float)
+    salto_cmj = Column(Float)
+    salto_rebote = Column(Float)
+    salto_horizontal = Column(Float)
+    
+    # Fuerza Superior
+    flexiones = Column(Integer)
+    lanzamiento_pecho = Column(Float)
+    lanzamiento_encima_cabeza = Column(Float)
+    
+    # Fuerza Core
+    plancha = Column(String)
+    abdominales = Column(Integer)
+    
+    jugadores = relationship("JugadoresPropios")

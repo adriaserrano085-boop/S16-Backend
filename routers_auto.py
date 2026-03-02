@@ -709,3 +709,65 @@ def crear_o_actualizar_evento(obj_in: schemas.EventoCreateUpdate, db: Session = 
     db.commit()
     db.refresh(db_evento)
     return db_evento
+
+# --- CRUD for PruebasFisicas ---
+@router.get("/pruebas_fisicas", response_model=List[schemas.PruebasFisicasResponse], tags=["PruebasFisicas"])
+@router.get("/pruebas_fisicas/", response_model=List[schemas.PruebasFisicasResponse], tags=["PruebasFisicas"])
+def read_pruebas_fisicas_list(skip: int = 0, limit: int = 1000, jugador_id: Optional[str] = None, db: Session = Depends(get_db)):
+    query = db.query(models.PruebasFisicas).options(joinedload(models.PruebasFisicas.jugadores))
+    if jugador_id:
+        query = query.filter(models.PruebasFisicas.jugador_id == jugador_id)
+    return query.offset(skip).limit(limit).all()
+
+@router.get("/pruebas_fisicas/{item_id}", response_model=schemas.PruebasFisicasResponse, tags=["PruebasFisicas"])
+def read_pruebas_fisicas(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(models.PruebasFisicas).options(joinedload(models.PruebasFisicas.jugadores)).filter(models.PruebasFisicas.id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Item not found")
+    return item
+
+@router.post("/pruebas_fisicas", response_model=schemas.PruebasFisicasResponse, tags=["PruebasFisicas"])
+@router.post("/pruebas_fisicas/", response_model=schemas.PruebasFisicasResponse, tags=["PruebasFisicas"])
+def create_pruebas_fisicas(obj_in: schemas.PruebasFisicasCreate, db: Session = Depends(get_db)):
+    # Optional logic: check if there's already a test for the same player on the same date
+    existing = db.query(models.PruebasFisicas).filter(
+        models.PruebasFisicas.jugador_id == obj_in.jugador_id,
+        models.PruebasFisicas.fecha == obj_in.fecha
+    ).first()
+    
+    if existing:
+        update_data = obj_in.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            if field != "id":
+                setattr(existing, field, value)
+        db.commit()
+        db.refresh(existing)
+        return existing
+        
+    db_obj = models.PruebasFisicas(**obj_in.model_dump())
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+@router.put("/pruebas_fisicas/{item_id}", response_model=schemas.PruebasFisicasResponse, tags=["PruebasFisicas"])
+def update_pruebas_fisicas(item_id: str, obj_in: schemas.PruebasFisicasUpdate, db: Session = Depends(get_db)):
+    db_obj = db.query(models.PruebasFisicas).filter(models.PruebasFisicas.id == item_id).first()
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    update_data = obj_in.model_dump(exclude_unset=True)
+    for field in update_data:
+        setattr(db_obj, field, update_data[field])
+    
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+@router.delete("/pruebas_fisicas/{item_id}", tags=["PruebasFisicas"])
+def delete_pruebas_fisicas(item_id: str, db: Session = Depends(get_db)):
+    item = db.query(models.PruebasFisicas).filter(models.PruebasFisicas.id == item_id).first()
+    if not item: raise HTTPException(status_code=404, detail="Item not found")
+    db.delete(item)
+    db.commit()
+    return {"message": "Deleted successfully"}
