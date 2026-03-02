@@ -265,6 +265,7 @@ class PruebasFisicas(Base):
     salto_cmj = Column(Float)
     salto_rebote = Column(Float)
     salto_horizontal = Column(Float)
+    sentadillas_1m = Column(Integer)
     
     # Fuerza Superior
     flexiones = Column(Integer)

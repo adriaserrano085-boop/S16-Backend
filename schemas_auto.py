@@ -339,6 +339,7 @@ class PruebasFisicasBase(BaseSchema):
     salto_cmj: Optional[float] = None
     salto_rebote: Optional[float] = None
     salto_horizontal: Optional[float] = None
+    sentadillas_1m: Optional[int] = None
     flexiones: Optional[int] = None
     lanzamiento_pecho: Optional[float] = None
     lanzamiento_encima_cabeza: Optional[float] = None
@@ -358,6 +359,7 @@ class PruebasFisicasCreate(BaseModel):
     salto_cmj: Optional[float] = None
     salto_rebote: Optional[float] = None
     salto_horizontal: Optional[float] = None
+    sentadillas_1m: Optional[int] = None
     flexiones: Optional[int] = None
     lanzamiento_pecho: Optional[float] = None
     lanzamiento_encima_cabeza: Optional[float] = None
@@ -375,6 +377,7 @@ class PruebasFisicasUpdate(BaseModel):
     salto_cmj: Optional[float] = None
     salto_rebote: Optional[float] = None
     salto_horizontal: Optional[float] = None
+    sentadillas_1m: Optional[int] = None
     flexiones: Optional[int] = None
     lanzamiento_pecho: Optional[float] = None
     lanzamiento_encima_cabeza: Optional[float] = None
