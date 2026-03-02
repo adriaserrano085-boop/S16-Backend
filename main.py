@@ -528,9 +528,9 @@ def get_all_users(
     else:
         role_str = str(current_user.role)
 
-    if role_str != "ADMIN":
+    if role_str not in ["ADMIN", "STAFF"]:
         logger.warning(f"PERM_ERROR: User {current_user.email} (role: {role_str}) denied access to /users/all")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Only ADMIN can access this. Your role is {role_str}")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Only ADMIN or STAFF can access this. Your role is {role_str}")
         
     users = db.query(models.User).all()
     return users
