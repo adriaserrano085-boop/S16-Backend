@@ -253,8 +253,11 @@ class PruebasFisicas(Base):
     
     # Velocidad
     velocidad_10m = Column(Float)
+    velocidad_10m_2 = Column(Float)
     velocidad_30m = Column(Float)
+    velocidad_30m_2 = Column(Float)
     velocidad_80m = Column(Float)
+    velocidad_80m_2 = Column(Float)
     
     # Resistencia
     broncotest = Column(String)
@@ -262,15 +265,21 @@ class PruebasFisicas(Base):
     
     # Fuerza Inferior
     salto_sj = Column(Float)
+    salto_sj_2 = Column(Float)
     salto_cmj = Column(Float)
+    salto_cmj_2 = Column(Float)
     salto_rebote = Column(Float)
+    salto_rebote_2 = Column(Float)
     salto_horizontal = Column(Float)
+    salto_horizontal_2 = Column(Float)
     sentadillas_1m = Column(Integer)
     
     # Fuerza Superior
     flexiones = Column(Integer)
     lanzamiento_pecho = Column(Float)
+    lanzamiento_pecho_2 = Column(Float)
     lanzamiento_encima_cabeza = Column(Float)
+    lanzamiento_encima_cabeza_2 = Column(Float)
     
     # Fuerza Core
     plancha = Column(String)

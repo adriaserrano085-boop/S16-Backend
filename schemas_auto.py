@@ -331,18 +331,27 @@ class PruebasFisicasBase(BaseSchema):
     jugador: Optional[Any] = Field(None, validation_alias=AliasChoices("jugador", "jugador_id"), serialization_alias="jugador")
     fecha: Optional[date] = None
     velocidad_10m: Optional[float] = None
+    velocidad_10m_2: Optional[float] = None
     velocidad_30m: Optional[float] = None
+    velocidad_30m_2: Optional[float] = None
     velocidad_80m: Optional[float] = None
+    velocidad_80m_2: Optional[float] = None
     broncotest: Optional[str] = None
     course_navette: Optional[float] = None
     salto_sj: Optional[float] = None
+    salto_sj_2: Optional[float] = None
     salto_cmj: Optional[float] = None
+    salto_cmj_2: Optional[float] = None
     salto_rebote: Optional[float] = None
+    salto_rebote_2: Optional[float] = None
     salto_horizontal: Optional[float] = None
+    salto_horizontal_2: Optional[float] = None
     sentadillas_1m: Optional[int] = None
     flexiones: Optional[int] = None
     lanzamiento_pecho: Optional[float] = None
+    lanzamiento_pecho_2: Optional[float] = None
     lanzamiento_encima_cabeza: Optional[float] = None
+    lanzamiento_encima_cabeza_2: Optional[float] = None
     plancha: Optional[str] = None
     abdominales: Optional[int] = None
 
@@ -351,36 +360,54 @@ class PruebasFisicasCreate(BaseModel):
     jugador_id: str
     fecha: date
     velocidad_10m: Optional[float] = None
+    velocidad_10m_2: Optional[float] = None
     velocidad_30m: Optional[float] = None
+    velocidad_30m_2: Optional[float] = None
     velocidad_80m: Optional[float] = None
+    velocidad_80m_2: Optional[float] = None
     broncotest: Optional[str] = None
     course_navette: Optional[float] = None
     salto_sj: Optional[float] = None
+    salto_sj_2: Optional[float] = None
     salto_cmj: Optional[float] = None
+    salto_cmj_2: Optional[float] = None
     salto_rebote: Optional[float] = None
+    salto_rebote_2: Optional[float] = None
     salto_horizontal: Optional[float] = None
+    salto_horizontal_2: Optional[float] = None
     sentadillas_1m: Optional[int] = None
     flexiones: Optional[int] = None
     lanzamiento_pecho: Optional[float] = None
+    lanzamiento_pecho_2: Optional[float] = None
     lanzamiento_encima_cabeza: Optional[float] = None
+    lanzamiento_encima_cabeza_2: Optional[float] = None
     plancha: Optional[str] = None
     abdominales: Optional[int] = None
 
 class PruebasFisicasUpdate(BaseModel):
     fecha: Optional[date] = None
     velocidad_10m: Optional[float] = None
+    velocidad_10m_2: Optional[float] = None
     velocidad_30m: Optional[float] = None
+    velocidad_30m_2: Optional[float] = None
     velocidad_80m: Optional[float] = None
+    velocidad_80m_2: Optional[float] = None
     broncotest: Optional[str] = None
     course_navette: Optional[float] = None
     salto_sj: Optional[float] = None
+    salto_sj_2: Optional[float] = None
     salto_cmj: Optional[float] = None
+    salto_cmj_2: Optional[float] = None
     salto_rebote: Optional[float] = None
+    salto_rebote_2: Optional[float] = None
     salto_horizontal: Optional[float] = None
+    salto_horizontal_2: Optional[float] = None
     sentadillas_1m: Optional[int] = None
     flexiones: Optional[int] = None
     lanzamiento_pecho: Optional[float] = None
+    lanzamiento_pecho_2: Optional[float] = None
     lanzamiento_encima_cabeza: Optional[float] = None
+    lanzamiento_encima_cabeza_2: Optional[float] = None
     plancha: Optional[str] = None
     abdominales: Optional[int] = None
 
