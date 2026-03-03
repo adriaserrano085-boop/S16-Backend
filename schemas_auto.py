@@ -337,6 +337,7 @@ class PruebasFisicasBase(BaseSchema):
     velocidad_80m: Optional[float] = None
     velocidad_80m_2: Optional[float] = None
     broncotest: Optional[str] = None
+    broncotest_20m: Optional[str] = None
     course_navette: Optional[float] = None
     salto_sj: Optional[float] = None
     salto_sj_2: Optional[float] = None

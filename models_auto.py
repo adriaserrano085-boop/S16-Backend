@@ -261,6 +261,7 @@ class PruebasFisicas(Base):
     
     # Resistencia
     broncotest = Column(String)
+    broncotest_20m = Column(String)
     course_navette = Column(Float)
     
     # Fuerza Inferior
